@@ -10,7 +10,7 @@ import '../logic/model/basic_model.dart';
 import '../utils.dart';
 import 'chat_list_tile.dart';
 
-final messages = chat_request.Messages();
+final messages = chat_request.Messages.singleton();
 
 final _inputTextFieldKey = GlobalKey<InputTextFieldState>();
 final _chatListKey = GlobalKey<ChatListViewState>();

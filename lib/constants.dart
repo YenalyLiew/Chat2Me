@@ -4,6 +4,7 @@
 const APP_NAME = 'Chat2Me';
 const API_KEY_KEY = "API_KEY";
 const CHAT_TEMPERATURE_KEY = "CHAT_TEMPERATURE_KEY";
+const GLOBAL_DIRECTIVE_KEY = "GLOBAL_DIRECTIVE_KEY";
 
 const MARKDOWN_TEST = """
 # Markdown Example

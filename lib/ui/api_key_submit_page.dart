@@ -1,6 +1,5 @@
 import 'package:chat_to_me/ui/chat_page.dart';
 import 'package:chat_to_me/utils.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../logic/local/shared_preferences.dart';

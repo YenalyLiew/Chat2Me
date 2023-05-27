@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:chat_to_me/logic/local/shared_preferences.dart';
+import 'package:chat_to_me/logic/model/chat_request.dart' as chat_request;
 import 'package:chat_to_me/ui/api_key_submit_page.dart';
 import 'package:chat_to_me/utils.dart';
 import 'package:flutter/material.dart';
@@ -33,6 +36,7 @@ class SettingsWidget extends StatefulWidget {
 
 class _SettingsWidgetState extends State<SettingsWidget> {
   double? _chatTemperature;
+  String? _globalDirective;
 
   @override
   void initState() {
@@ -40,11 +44,14 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     super.initState();
   }
 
-  void updateSettings() {
-    chatTemperature.then((value) {
-      setState(() {
-        _chatTemperature = value;
-      });
+  Future<void> updateSettings() async {
+    final double? ct = await chatTemperature;
+    log(ct.toString(), name: "chatTemperature");
+    final String? gd = await globalDirective;
+    log(gd.toString(), name: "globalDirective");
+    setState(() {
+      _chatTemperature = ct;
+      _globalDirective = gd;
     });
   }
 
@@ -59,6 +66,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             TextButton(
                 onPressed: () {
                   deleteApiKey().then((_) {
+                    chat_request.Messages.removeSingleton();
                     Navigator.of(context)
                       ..pop()
                       ..pushAndRemoveUntil(
@@ -134,6 +142,68 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     );
   }
 
+  AlertDialog buildGlobalDirectiveDialog(BuildContext context) {
+    final controller = TextEditingController(text: _globalDirective);
+    return AlertDialog(
+      title: const Text("Set Global Directive"),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text("This is actually named \"System Role\" officially.\n"
+              "In the ChatGPT API, the role \"system\" is used for system-level instructions or control. "
+              "Messages with the system role are used to guide the overall behavior "
+              "of the conversation or to set specific parameters of the model."),
+          const SizedBox(
+            height: 16,
+          ),
+          TextField(
+            keyboardType: TextInputType.text,
+            controller: controller,
+            minLines: 1,
+            maxLines: 5,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(16.0))),
+              labelText: "Global directive",
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            deleteGlobalDirective().then((_) {
+              chat_request.Messages.singleton().removeSystem();
+              updateSettings();
+              Navigator.pop(context);
+            });
+          },
+          child: const Text("Reset"),
+        ),
+        const SizedBox(
+          width: 16.0,
+        ),
+        TextButton(
+          onPressed: Navigator.of(context).pop,
+          child: const Text("No"),
+        ),
+        TextButton(
+          onPressed: () {
+            var text = controller.text;
+            if (text.isNotEmpty) {
+              saveGlobalDirective(text).then((_) {
+                updateSettings();
+                chat_request.Messages.singleton().addSystem(text);
+                Navigator.pop(context);
+              });
+            }
+          },
+          child: const Text("Yes"),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) => SettingsList(
           lightTheme:
@@ -157,6 +227,16 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             SettingsSection(
               title: const Text("Chat"),
               tiles: [
+                SettingsTile(
+                  leading: const Icon(Icons.directions),
+                  title: const Text("Global directive"),
+                  value:
+                      _globalDirective != null ? Text(_globalDirective!) : null,
+                  onPressed: (context) {
+                    showDialog(
+                        context: context, builder: buildGlobalDirectiveDialog);
+                  },
+                ),
                 SettingsTile(
                   leading: const Icon(Icons.emoji_emotions),
                   title: const Text("Temperature"),

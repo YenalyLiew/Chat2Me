@@ -31,3 +31,18 @@ Future<void> deleteChatTemperature() async {
   final sp = await SharedPreferences.getInstance();
   await sp.remove(CHAT_TEMPERATURE_KEY);
 }
+
+Future<String?> get globalDirective async {
+  final sp = await SharedPreferences.getInstance();
+  return sp.getString(GLOBAL_DIRECTIVE_KEY);
+}
+
+Future<void> saveGlobalDirective(String temp) async {
+  final sp = await SharedPreferences.getInstance();
+  await sp.setString(GLOBAL_DIRECTIVE_KEY, temp);
+}
+
+Future<void> deleteGlobalDirective() async {
+  final sp = await SharedPreferences.getInstance();
+  await sp.remove(GLOBAL_DIRECTIVE_KEY);
+}

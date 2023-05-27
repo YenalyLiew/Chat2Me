@@ -172,7 +172,7 @@ class AIChatListItem implements ChatListItem {
     switch (response) {
       case chat_response.Success s:
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             MarkdownBody(
               data: s.getFirstChoice().message.content,
@@ -187,12 +187,12 @@ class AIChatListItem implements ChatListItem {
             const SizedBox(height: 12.0),
             Text(
               ">>> Total Tokens: ${s.usage.totalTokens}",
-              textAlign: TextAlign.end,
+              textAlign: TextAlign.start,
               style: const TextStyle(fontSize: 12),
             ),
             Text(
               ">>> ${localizeFinishReason(s.getFirstChoice().finishReason)}",
-              textAlign: TextAlign.end,
+              textAlign: TextAlign.start,
               style: const TextStyle(fontSize: 12),
             ),
           ],
