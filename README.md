@@ -20,11 +20,19 @@ An AI chat application based on OpenAI api.
 
 ### Key 提交界面
 
+![](https://github.com/YenalyLiew/Chat2Me/blob/master/screenshot/submit_interface.jpg)
+
 ### 空对话界面
+
+![](https://github.com/YenalyLiew/Chat2Me/blob/master/screenshot/empty_chat_interface.jpg)
 
 ### 对话界面
 
+![](https://github.com/YenalyLiew/Chat2Me/blob/master/screenshot/chat_interface.jpg)
+
 ### 设置界面
+
+![](https://github.com/YenalyLiew/Chat2Me/blob/master/screenshot/settings_interface.jpg)
 
 ## 实现功能
 
