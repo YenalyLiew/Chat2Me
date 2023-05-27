@@ -50,9 +50,7 @@ class ApiKeySubmitPage extends StatelessWidget {
                     shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(100.0))),
                     onPressed: () {
-                      final key = kDebugMode
-                          ? "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"
-                          : _apiKeySubmitTextFieldKey.currentState!.text;
+                      final key = _apiKeySubmitTextFieldKey.currentState!.text;
                       if (key.isNotEmpty) {
                         // TODO: Logic
                         saveApiKey(key).then((_) {

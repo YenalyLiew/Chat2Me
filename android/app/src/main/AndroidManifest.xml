@@ -7,7 +7,7 @@
         </intent>
     </queries>
     <application
-        android:label="chat_to_me"
+        android:label="Chat2Me"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

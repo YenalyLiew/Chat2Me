@@ -8,6 +8,8 @@ An AI chat application based on OpenAI api.
 
 自学 3 天后用 Flutter 做出来的第一款软件，功能还不是很完善。如果有时间维护，会美化一下界面和完善一下其他功能。
 
+目前只在 Web 和 Android 端做过测试。
+
 **初次使用需要提供 OpenAI Key ！！**
 
 如果在国内，仍然需要科学上网。
