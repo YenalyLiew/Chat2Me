@@ -1,5 +1,7 @@
 # Chat2Me
 
+![](https://github.com/YenalyLiew/Chat2Me/blob/master/assets/logo/ctm_launcher_round.png)
+
 An AI chat application based on OpenAI api.
 
 基于 OpenAI api 的一款 AI 对话软件。
