@@ -76,5 +76,5 @@ class Messages {
 
   String toJsonFormat() => jsonEncode(_messages);
 
-  void clear() => _messages.clear();
+  void clear() => _messages.removeRange(1, _messages.length);
 }

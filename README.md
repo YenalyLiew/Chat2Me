@@ -42,7 +42,7 @@ An AI chat application based on OpenAI api.
 
 ### Chat 对话
 
-暂时写死使用的是`gpt-3.5-turbo-0301`模型。
+暂时写死使用的是`gpt-3.5-turbo`模型。
 
 在 AI 回答右下角提供了本次回答使用的`tokens`数量和本次回答结束的**结束原因**（`finish_reason`）。
 
@@ -58,14 +58,12 @@ An AI chat application based on OpenAI api.
 （Chat 一栏由上到下）
 
 1. **全局指令**（`Global directive`）。比如说你想让他成为一个猫娘，可以直接从这里给他下指令，而不必每次都从对话窗口告诉他。这是我自己起的名字，官方把这个称作**系统角色**（`System role`）对话。
-
 2. **生成温度**（`Temperature`）。用于修改 AI 的创造性程度（0.0 ~ 2.0）。
 
 ## 待实现
 
 1. 可修改**用户名**。
 2. 可修改**主题配色**。
-4. 图标。
 
 ### Chat 对话
 
