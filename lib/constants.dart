@@ -1,8 +1,14 @@
 // ignore_for_file: constant_identifier_names, non_constant_identifier_names
 
 
-const APP_NAME = 'Chat2Me';
+const APP_NAME = "Chat2Me";
 const API_KEY_KEY = "API_KEY";
+
+const ROUND_LOGO_PATH = "assets/logo/ctm_launcher_round.png";
+
+const APP_GITHUB_LINK = "https://github.com/YenalyLiew/Chat2Me";
+const APP_GITHUB_OPEN_SOURCE_LICENSES_LINK = "https://github.com/YenalyLiew/Chat2Me/blob/master/LICENSE";
+
 const CHAT_TEMPERATURE_KEY = "CHAT_TEMPERATURE_KEY";
 const GLOBAL_DIRECTIVE_KEY = "GLOBAL_DIRECTIVE_KEY";
 

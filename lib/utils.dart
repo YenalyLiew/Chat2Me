@@ -1,14 +1,21 @@
 import 'dart:math';
 
+import 'package:about/about.dart' as about;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-extension on Random {
+import 'constants.dart';
+
+extension QuickRandom on Random {
   int random(int startInclusive, int endExclusive) =>
       nextInt(endExclusive - startInclusive) + startInclusive;
 }
 
-extension SnackBarQuickly on BuildContext {
+extension ListRandom<T> on List<T> {
+  T random() => this[Random().nextInt(length)];
+}
+
+extension QuickSnackBar on BuildContext {
   void showFloatingSnackBar(String text) =>
       ScaffoldMessenger.of(this).showSnackBar(SnackBar(
         dismissDirection: DismissDirection.none,
@@ -25,10 +32,8 @@ extension SnackBarQuickly on BuildContext {
       ));
 }
 
-Text setAppNameArtTitle({double? textSize, TextAlign? textAlign}) => Text.rich(
-    textAlign: textAlign,
-    TextSpan(
-      style: TextStyle(fontSize: textSize),
+TextSpan setAppNameArtTitleTextSpan({TextStyle? textStyle}) => TextSpan(
+      style: textStyle,
       children: const <TextSpan>[
         TextSpan(
           text: "Chat",
@@ -36,7 +41,42 @@ Text setAppNameArtTitle({double? textSize, TextAlign? textAlign}) => Text.rich(
         ),
         TextSpan(text: "2Me")
       ],
-    ));
+    );
+
+Text setAppNameArtTitle({TextStyle? textStyle, TextAlign? textAlign}) =>
+    Text.rich(
+      setAppNameArtTitleTextSpan(textStyle: textStyle),
+      textAlign: textAlign,
+    );
+
+void showAboutPage(BuildContext context) => about.showAboutPage(
+      context: context,
+      applicationIcon: const SizedBox(
+        width: 100,
+        height: 100,
+        child: Image(
+          image: AssetImage(ROUND_LOGO_PATH),
+        ),
+      ),
+      applicationLegalese: "Copyright © Yenaly Liew, 2023",
+      applicationDescription: const Text(
+        "An AI chat application based on OpenAI api.",
+      ),
+      applicationVersion: "1.0",
+      children: [
+        ListTile(
+          leading: const Icon(Icons.link),
+          title: const Text("View on Github"),
+          onTap: () => openBrowserByLink(context, APP_GITHUB_LINK),
+        ),
+        ListTile(
+          leading: const Icon(Icons.favorite_border),
+          title: const Text("View open source licenses"),
+          onTap: () =>
+              openBrowserByLink(context, APP_GITHUB_OPEN_SOURCE_LICENSES_LINK),
+        )
+      ],
+    );
 
 Future<void> openBrowserByLink(BuildContext context, String? link) async {
   if (link == null) {

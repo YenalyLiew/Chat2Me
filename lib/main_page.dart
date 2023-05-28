@@ -45,12 +45,20 @@ class WelcomeState extends State<WelcomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
+              const SizedBox(
+                height: 80,
+                width: 80,
+                child: Image(
+                  image: AssetImage(ROUND_LOGO_PATH),
+                ),
+              ),
+              const SizedBox(height: 8.0),
               const Text(
                 "Welcome to",
                 style: TextStyle(fontSize: 24.0),
                 textAlign: TextAlign.center,
               ),
-              setAppNameArtTitle(textSize: 32.0),
+              setAppNameArtTitle(textStyle: const TextStyle(fontSize: 32.0)),
             ],
           ),
         ),

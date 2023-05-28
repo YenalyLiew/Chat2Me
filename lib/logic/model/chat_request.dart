@@ -6,7 +6,7 @@ import 'package:chat_to_me/logic/local/shared_preferences.dart';
 import 'basic_model.dart';
 
 class Messages {
-  void debugMessages() => log(_messages.toString(),
+  void _debugMessages() => log(_messages.toString(),
       time: DateTime.timestamp(), name: "ChatRequestMessage");
 
   static Messages? _messagesSingleton;
@@ -44,7 +44,7 @@ class Messages {
         "content": text,
       });
     }
-    debugMessages();
+    _debugMessages();
   }
 
   void removeSystem() {
@@ -54,7 +54,7 @@ class Messages {
         _messages.removeAt(0);
       }
     }
-    debugMessages();
+    _debugMessages();
   }
 
   void addUser(String text, [String? name]) {
@@ -63,7 +63,7 @@ class Messages {
       "content": text,
       if (name != null) "name": name,
     });
-    debugMessages();
+    _debugMessages();
   }
 
   void addAI(String text) {
@@ -71,7 +71,7 @@ class Messages {
       "role": Role.assistant.name,
       "content": text,
     });
-    debugMessages();
+    _debugMessages();
   }
 
   String toJsonFormat() => jsonEncode(_messages);

@@ -6,7 +6,7 @@ An AI chat application based on OpenAI api.
 
 ## 简介
 
-自学 3 天后用 Flutter 做出来的第一款软件，功能还不是很完善。如果有时间维护，会美化一下界面和完善一下其他功能。
+我的第一款 Flutter 软件，功能还不是很完善。如果有时间维护，会美化一下界面和完善一下其他功能。
 
 目前只在 Web 和 Android 端做过测试。
 
@@ -63,7 +63,6 @@ An AI chat application based on OpenAI api.
 
 1. 可修改**用户名**。
 2. 可修改**主题配色**。
-3. 实现**关于**界面。
 4. 图标。
 
 ### Chat 对话

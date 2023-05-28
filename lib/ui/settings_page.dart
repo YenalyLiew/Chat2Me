@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:chat_to_me/constants.dart';
 import 'package:chat_to_me/logic/local/shared_preferences.dart';
 import 'package:chat_to_me/logic/model/chat_request.dart' as chat_request;
 import 'package:chat_to_me/ui/api_key_submit_page.dart';
@@ -11,7 +12,8 @@ class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) =>
+      Scaffold(
         appBar: AppBar(
           centerTitle: true,
           title: Row(
@@ -55,12 +57,15 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     });
   }
 
-  AlertDialog buildClearAPIKeyDialog(BuildContext context) => AlertDialog(
+  AlertDialog buildClearAPIKeyDialog(BuildContext context) =>
+      AlertDialog(
           title: const Text("You are going to clear your API Key!"),
           content: const Text("Are you sure to do it?"),
           actions: [
             TextButton(
-              onPressed: Navigator.of(context).pop,
+              onPressed: Navigator
+                  .of(context)
+                  .pop,
               child: const Text("No"),
             ),
             TextButton(
@@ -72,7 +77,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                       ..pushAndRemoveUntil(
                         MaterialPageRoute(
                             builder: (context) => const ApiKeySubmitPage()),
-                        (route) => false,
+                            (route) => false,
                       );
                   });
                 },
@@ -88,26 +93,29 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     final controller = TextEditingController(text: "${_chatTemperature ?? ''}");
     return AlertDialog(
       title: const Text("Set Temperature"),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text("What sampling temperature to use, "
-              "between 0 and 2. "
-              "Higher values like 0.8 will make the output more random, "
-              "while lower values like 0.2 will make it more focused and deterministic."),
-          const SizedBox(
-            height: 16,
-          ),
-          TextField(
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            controller: controller,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(16.0))),
-              labelText: "Temperature (0.0 ~ 2.0)",
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("What sampling temperature to use, "
+                "between 0 and 2. "
+                "Higher values like 0.8 will make the output more random, "
+                "while lower values like 0.2 will make it more focused and deterministic."),
+            const SizedBox(
+              height: 16,
             ),
-          ),
-        ],
+            TextField(
+              keyboardType:
+              const TextInputType.numberWithOptions(decimal: true),
+              controller: controller,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(16.0))),
+                labelText: "Temperature (0.0 ~ 2.0)",
+              ),
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
@@ -123,7 +131,9 @@ class _SettingsWidgetState extends State<SettingsWidget> {
           width: 16.0,
         ),
         TextButton(
-          onPressed: Navigator.of(context).pop,
+          onPressed: Navigator
+              .of(context)
+              .pop,
           child: const Text("No"),
         ),
         TextButton(
@@ -146,28 +156,30 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     final controller = TextEditingController(text: _globalDirective);
     return AlertDialog(
       title: const Text("Set Global Directive"),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text("This is actually named \"System Role\" officially.\n"
-              "In the ChatGPT API, the role \"system\" is used for system-level instructions or control. "
-              "Messages with the system role are used to guide the overall behavior "
-              "of the conversation or to set specific parameters of the model."),
-          const SizedBox(
-            height: 16,
-          ),
-          TextField(
-            keyboardType: TextInputType.text,
-            controller: controller,
-            minLines: 1,
-            maxLines: 5,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(16.0))),
-              labelText: "Global directive",
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text("This is actually named \"System Role\" officially.\n"
+                "In the ChatGPT API, the role \"system\" is used for system-level instructions or control. "
+                "Messages with the system role are used to guide the overall behavior "
+                "of the conversation or to set specific parameters of the model."),
+            const SizedBox(
+              height: 16,
             ),
-          ),
-        ],
+            TextField(
+              keyboardType: TextInputType.text,
+              controller: controller,
+              minLines: 1,
+              maxLines: 5,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(16.0))),
+                labelText: "Global directive",
+              ),
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
@@ -184,7 +196,9 @@ class _SettingsWidgetState extends State<SettingsWidget> {
           width: 16.0,
         ),
         TextButton(
-          onPressed: Navigator.of(context).pop,
+          onPressed: Navigator
+              .of(context)
+              .pop,
           child: const Text("No"),
         ),
         TextButton(
@@ -205,11 +219,16 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   }
 
   @override
-  Widget build(BuildContext context) => SettingsList(
+  Widget build(BuildContext context) =>
+      SettingsList(
           lightTheme:
-              SettingsThemeData(titleTextColor: Theme.of(context).primaryColor),
+          SettingsThemeData(titleTextColor: Theme
+              .of(context)
+              .primaryColor),
           darkTheme:
-              SettingsThemeData(titleTextColor: Theme.of(context).primaryColor),
+          SettingsThemeData(titleTextColor: Theme
+              .of(context)
+              .primaryColor),
           sections: [
             SettingsSection(
               title: const Text("Common"),
@@ -230,8 +249,13 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                 SettingsTile(
                   leading: const Icon(Icons.directions),
                   title: const Text("Global directive"),
-                  value:
-                      _globalDirective != null ? Text(_globalDirective!) : null,
+                  value: _globalDirective != null
+                      ? Text(
+                    _globalDirective!,
+                    maxLines: 5,
+                    overflow: TextOverflow.ellipsis,
+                  )
+                      : null,
                   onPressed: (context) {
                     showDialog(
                         context: context, builder: buildGlobalDirectiveDialog);
@@ -247,6 +271,16 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   },
                 )
               ],
-            )
+            ),
+            SettingsSection(
+              title: const Text("App"),
+              tiles: [
+                SettingsTile(
+                  leading: const Icon(Icons.help),
+                  title: const Text("About $APP_NAME"),
+                  onPressed: showAboutPage,
+                )
+              ],
+            ),
           ]);
 }
