@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:chat_to_me/logic/model/chat_request.dart' as chat_request;
 import 'package:chat_to_me/logic/model/chat_response.dart' as chat_response;
 import 'package:chat_to_me/logic/network/openai_request.dart';
@@ -5,6 +7,7 @@ import 'package:chat_to_me/ui/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:async/async.dart';
 
 import '../logic/model/basic_model.dart';
 import '../utils.dart';
@@ -112,7 +115,8 @@ class ChatListFabState extends State<ChatListFabWidget> {
                             _inputTextFieldKey.currentState!
                               ..clearText()
                               ..clearFocus()
-                              ..setSending(false);
+                              ..setSendingState(false)
+                              ..cancelResponse();
                             messages.clear();
                           },
                           child: const Text("Yes")),
@@ -215,11 +219,14 @@ class InputTextFieldWidget extends StatefulWidget {
 class InputTextFieldState extends State<InputTextFieldWidget> {
   late final _controller = TextEditingController();
   late final _focusNode = FocusNode();
-  var _isSending = false;
+
+  CancelableOperation<chat_response.AIChatResponse?>? _cancelableResponse;
+  bool _isSending = false;
 
   @override
   void dispose() {
     super.dispose();
+    _cancelableResponse?.cancel();
     _controller.dispose();
     _focusNode.dispose();
   }
@@ -230,9 +237,11 @@ class InputTextFieldState extends State<InputTextFieldWidget> {
 
   void clearText() => _controller.clear();
 
-  void setSending(bool send) => setState(() {
+  void setSendingState(bool send) => setState(() {
         _isSending = send;
       });
+
+  void cancelResponse() => _cancelableResponse?.cancel();
 
   void waitSending() {
     late String text;
@@ -245,10 +254,17 @@ class InputTextFieldState extends State<InputTextFieldWidget> {
       _isSending = true;
       _chatListKey.currentState!.animateScrollToBottom();
     });
-    getAIChatResponse(
-      model: AIModel.gpt3_5Turbo,
-      messages: messages,
-    ).then((response) {
+    _cancelableResponse = CancelableOperation.fromFuture(
+      getAIChatResponse(
+        model: AIModel.gpt3_5Turbo,
+        messages: messages,
+      ),
+      onCancel: () {
+        log("Chat Response has been canceled.", name: "ChatResponse");
+      },
+    );
+    _cancelableResponse?.value.then((response) {
+      if (response == null) return;
       if (response is chat_response.Success) {
         messages.addAI(response.getFirstChoice().message.content);
       }
