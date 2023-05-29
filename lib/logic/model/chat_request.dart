@@ -25,6 +25,8 @@ class Messages {
 
   final List<Map<String, dynamic>> _messages = [];
 
+  bool _hasSystem = false;
+
   List<Map<String, dynamic>> get all => _messages;
 
   void addSystem(String text) {
@@ -44,6 +46,7 @@ class Messages {
         "content": text,
       });
     }
+    _hasSystem = true;
     _debugMessages();
   }
 
@@ -54,6 +57,7 @@ class Messages {
         _messages.removeAt(0);
       }
     }
+    _hasSystem = false;
     _debugMessages();
   }
 
@@ -76,5 +80,11 @@ class Messages {
 
   String toJsonFormat() => jsonEncode(_messages);
 
-  void clear() => _messages.removeRange(1, _messages.length);
+  void clear() {
+    if (_hasSystem) {
+      _messages.removeRange(1, _messages.length);
+    } else {
+      _messages.clear();
+    }
+  }
 }
