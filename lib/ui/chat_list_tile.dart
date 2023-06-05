@@ -3,8 +3,12 @@ import 'package:chat_to_me/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
+import '../logic/model/basic_model.dart';
+import '../logic/model/chat_history.dart';
+
 const _markdownDecorationOpacity = 0.05;
 const _markdownTextScaleFactor = 1.15;
+const _avatarSize = 43.0;
 
 class ChatListTile extends StatefulWidget {
   const ChatListTile({required this.item, super.key});
@@ -27,8 +31,8 @@ class _ChatListTileState extends State<ChatListTile> {
           children: <Widget>[
             Expanded(
               child: Padding(
-                padding:
-                    const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 8.0),
+                padding: const EdgeInsets.only(
+                    right: 8.0, bottom: 8.0, left: _avatarSize),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
@@ -57,8 +61,8 @@ class _ChatListTileState extends State<ChatListTile> {
             widget.item.buildAvatar(context),
             Expanded(
               child: Padding(
-                padding:
-                    const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 8.0),
+                padding: const EdgeInsets.only(
+                    left: 8.0, bottom: 8.0, right: _avatarSize),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -80,7 +84,7 @@ class _ChatListTileState extends State<ChatListTile> {
       );
 }
 
-abstract interface class ChatListItem {
+abstract class ChatListItem {
   Widget buildAvatar(BuildContext context);
 
   Widget buildName(BuildContext context);
@@ -88,22 +92,64 @@ abstract interface class ChatListItem {
   Widget buildMessage(BuildContext context);
 
   Widget buildOther(BuildContext context);
+
+  static ChatListItem fromHistory(DetailedChatHistory detailedChatHistory) {
+    final role = detailedChatHistory.role;
+    switch (role) {
+      case Role.user:
+        return UserChatListItem(
+          text: detailedChatHistory.content,
+          dateTime: detailedChatHistory.dateTime,
+        );
+      case Role.assistant:
+        return AIChatListItem(
+          name: AIModel.gpt3_5Turbo.name,
+          responseFromDatabase: detailedChatHistory.content,
+          dateTime: detailedChatHistory.dateTime,
+        );
+      default:
+        throw StateError("Unreachable code.");
+    }
+  }
+
+  MarkdownBody buildMarkdownBody(BuildContext context,
+          {required String text}) =>
+      MarkdownBody(
+        data: text,
+        styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+          textScaleFactor: _markdownTextScaleFactor,
+        ),
+        selectable: true,
+        onTapLink: (link, href, title) => openBrowserByLink(context, href),
+      );
+
+  Widget buildTipText(String tip, {String? what}) => Text(
+        what == null ? ">>> $tip" : ">>> $what: $tip",
+        textAlign: TextAlign.start,
+        style: const TextStyle(fontSize: 12),
+      );
 }
 
-class UserChatListItem implements ChatListItem {
+class UserChatListItem extends ChatListItem {
   String name;
   IconData? avatar;
-  String? text;
+  String text;
+  DateTime? dateTime;
 
   UserChatListItem({
     this.name = "User",
     this.avatar,
-    this.text,
+    required this.text,
+    this.dateTime,
   });
 
   @override
-  Widget buildAvatar(BuildContext context) => CircleAvatar(
-        child: Icon(avatar ?? Icons.person),
+  Widget buildAvatar(BuildContext context) => SizedBox(
+        width: _avatarSize,
+        height: _avatarSize,
+        child: CircleAvatar(
+          child: Icon(avatar ?? Icons.person),
+        ),
       );
 
   @override
@@ -120,32 +166,40 @@ class UserChatListItem implements ChatListItem {
       );
 
   @override
-  Widget buildMessage(BuildContext context) => MarkdownBody(
-        data: text ?? '',
-        selectable: true,
-        styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
-          textScaleFactor: _markdownTextScaleFactor,
-        ),
-        onTapLink: (link, href, title) => openBrowserByLink(context, href),
+  Widget buildMessage(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          buildMarkdownBody(context, text: text),
+          const SizedBox(height: 12.0),
+          buildTipText((dateTime ?? DateTime.timestamp()).localFormat()),
+        ],
       );
 }
 
-class AIChatListItem implements ChatListItem {
+class AIChatListItem extends ChatListItem {
   String name;
   IconData? avatar;
   chat_response.AIChatResponse? response;
+  String? responseFromDatabase;
   String? error;
+  DateTime? dateTime;
 
   AIChatListItem({
     required this.name,
     this.avatar,
     this.response,
+    this.responseFromDatabase,
     this.error,
+    this.dateTime,
   });
 
   @override
-  Widget buildAvatar(BuildContext context) => CircleAvatar(
-        child: Icon(avatar ?? Icons.personal_video),
+  Widget buildAvatar(BuildContext context) => SizedBox(
+        width: _avatarSize,
+        height: _avatarSize,
+        child: CircleAvatar(
+          child: Icon(avatar ?? Icons.personal_video),
+        ),
       );
 
   @override
@@ -174,54 +228,52 @@ class AIChatListItem implements ChatListItem {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            MarkdownBody(
-              data: s.getFirstChoice().message.content,
-              styleSheet:
-                  MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
-                textScaleFactor: _markdownTextScaleFactor,
-              ),
-              selectable: true,
-              onTapLink: (link, href, title) =>
-                  openBrowserByLink(context, href),
-            ),
+            buildMarkdownBody(context,
+                text: s.getFirstChoice().message.content),
             const SizedBox(height: 12.0),
-            Text(
-              ">>> Total Tokens: ${s.usage.totalTokens}",
-              textAlign: TextAlign.start,
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              ">>> ${localizeFinishReason(s.getFirstChoice().finishReason)}",
-              textAlign: TextAlign.start,
-              style: const TextStyle(fontSize: 12),
-            ),
+            buildTipText(s.usage.totalTokens.toString(), what: "total tokens"),
+            buildTipText(localizeFinishReason(s.getFirstChoice().finishReason)),
+            buildTipText((dateTime ?? DateTime.timestamp()).localFormat()),
           ],
         );
 
       case chat_response.Error e:
-        return SelectableText(
-          e.toString(),
-          style: const TextStyle(color: Colors.red),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SelectableText(
+              e.toString(),
+              style: const TextStyle(color: Colors.red),
+            ),
+            const SizedBox(height: 12.0),
+            buildTipText((dateTime ?? DateTime.timestamp()).localFormat()),
+          ],
         );
 
       default: // null
-        return const Text(
-          'You have not set API key yet, right?',
-          style: TextStyle(color: Colors.red),
-        );
+        final rfd = responseFromDatabase;
+        if (rfd != null) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildMarkdownBody(context, text: rfd),
+              const SizedBox(height: 12.0),
+              buildTipText((dateTime ?? DateTime.timestamp()).localFormat()),
+            ],
+          );
+        } else {
+          return const Text(
+            'You have not set API key yet, right?',
+            style: TextStyle(color: Colors.red),
+          );
+        }
     }
   }
 
-  String localizeFinishReason(String? text) {
-    switch (text) {
-      case "stop":
-        return "That's all UwU!";
-      case "length":
-        return "Token limit UwU!";
-      case "content_filter":
-        return "Something immoral UwU?";
-      default:
-        return "Incomplete or still in progress UwU!";
-    }
-  }
+  String localizeFinishReason(String? text) => switch (text) {
+        "stop" => "That's all UwU!",
+        "length" => "Token limit UwU!",
+        "content_filter" => "Something immoral UwU?",
+        _ => "Incomplete or still in progress UwU!",
+      };
 }

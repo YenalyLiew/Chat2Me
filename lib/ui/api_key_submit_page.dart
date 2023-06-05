@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:developer' as dev;
+import 'dart:math';
+
 import 'package:chat_to_me/constants.dart';
 import 'package:chat_to_me/ui/chat_page.dart';
 import 'package:chat_to_me/utils.dart';
@@ -9,28 +13,6 @@ final _apiKeySubmitTextFieldKey = GlobalKey<ApiKeySubmitTextFieldState>();
 
 class ApiKeySubmitPage extends StatelessWidget {
   const ApiKeySubmitPage({super.key});
-
-  List<List<InlineSpan>> differentTitleSpans() => [
-        [
-          const TextSpan(text: "Hey! This is "),
-          setAppNameArtTitleTextSpan(),
-          const TextSpan(text: "!"),
-        ],
-        [
-          const TextSpan(text: "Senpai, "),
-          setAppNameArtTitleTextSpan(),
-          const TextSpan(text: " UwU!"),
-        ],
-        [
-          const TextSpan(text: "Why not "),
-          setAppNameArtTitleTextSpan(),
-          const TextSpan(text: "?"),
-        ],
-        [
-          setAppNameArtTitleTextSpan(),
-          const TextSpan(text: ", please!"),
-        ],
-      ];
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -48,13 +30,7 @@ class ApiKeySubmitPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8.0),
-                Text.rich(
-                  TextSpan(
-                    style: Theme.of(context).textTheme.headlineMedium,
-                    children: differentTitleSpans().random(),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+                const ApiKeySubmitTitleWidget(),
                 const SizedBox(height: 8.0),
                 Container(
                   margin: const EdgeInsets.only(top: 8.0),
@@ -70,7 +46,6 @@ class ApiKeySubmitPage extends StatelessWidget {
                         final key =
                             _apiKeySubmitTextFieldKey.currentState!.text;
                         if (key.isNotEmpty) {
-                          // TODO: Logic
                           saveApiKey(key).then((_) {
                             Navigator.pushReplacement(
                                 context,
@@ -119,6 +94,99 @@ class ApiKeySubmitPage extends StatelessWidget {
           ]),
         ),
       );
+}
+
+class ApiKeySubmitTitleWidget extends StatefulWidget {
+  const ApiKeySubmitTitleWidget({super.key});
+
+  @override
+  State<ApiKeySubmitTitleWidget> createState() =>
+      _ApiKeySubmitTitleWidgetState();
+}
+
+class _ApiKeySubmitTitleWidgetState extends State<ApiKeySubmitTitleWidget> {
+  bool _isVisible = true;
+  late Timer _timer;
+
+  static final List<List<InlineSpan>> _differentTitleSpans = [
+    [
+      const TextSpan(text: "Hey! This is "),
+      setAppNameArtTitleTextSpan(),
+      const TextSpan(text: "!"),
+    ],
+    [
+      const TextSpan(text: "Senpai, "),
+      setAppNameArtTitleTextSpan(),
+      const TextSpan(text: " UwU!"),
+    ],
+    [
+      const TextSpan(text: "Why not "),
+      setAppNameArtTitleTextSpan(),
+      const TextSpan(text: "?"),
+    ],
+    [
+      setAppNameArtTitleTextSpan(),
+      const TextSpan(text: ", please!"),
+    ],
+  ];
+
+  final _timerDuration = const Duration(seconds: 1);
+  final _animationDuration = const Duration(seconds: 1);
+  final _textSwitchingTime = const Duration(seconds: 10);
+
+  int _titleIndex = Random().nextInt(_differentTitleSpans.length);
+
+  List<InlineSpan> get _randomTitleSpan => _differentTitleSpans[_titleIndex];
+
+  @override
+  void initState() {
+    super.initState();
+    final animateDurationSeconds = _animationDuration.inSeconds;
+    final lastSwitchingSeconds =
+        (_textSwitchingTime - _animationDuration).inSeconds;
+    final textSwitchingSeconds = _textSwitchingTime.inSeconds;
+    _timer = Timer.periodic(_timerDuration, (timer) {
+      int period = periodFromTick(timer.tick, textSwitchingSeconds);
+      dev.log(period.toString(), name: "period");
+      if (period == textSwitchingSeconds) {
+        dev.log("_isVisible = true", name: "Title");
+        setState(() {
+          _titleIndex = (_titleIndex + 1) % _differentTitleSpans.length;
+          _isVisible = true;
+        });
+      } else if (period == lastSwitchingSeconds) {
+        dev.log("_isVisible = false", name: "Title");
+        setState(() {
+          _isVisible = false;
+        });
+      }
+    });
+  }
+
+  int periodFromTick(int tick, int switchingTime) =>
+      tick - switchingTime * ((tick - 1) / switchingTime).floor();
+
+  @override
+  void dispose() {
+    super.dispose();
+    _timer.cancel();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      opacity: _isVisible ? 1.0 : 0.0,
+      duration: _animationDuration,
+      curve: Curves.fastEaseInToSlowEaseOut,
+      child: Text.rich(
+        TextSpan(
+          style: Theme.of(context).textTheme.headlineMedium,
+          children: _randomTitleSpan,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
 }
 
 class ApiKeySubmitTextField extends StatefulWidget {

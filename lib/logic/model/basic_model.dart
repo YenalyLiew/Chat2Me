@@ -15,4 +15,11 @@ enum Role {
   const Role(this.name);
 
   final String name;
+
+  static Role parse(String role) => switch (role) {
+        "system" => Role.system,
+        "user" => Role.user,
+        "assistant" => Role.assistant,
+        _ => throw StateError("Unreachable code.")
+      };
 }

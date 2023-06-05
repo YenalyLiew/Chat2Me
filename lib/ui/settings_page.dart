@@ -2,18 +2,18 @@ import 'dart:developer';
 
 import 'package:chat_to_me/constants.dart';
 import 'package:chat_to_me/logic/local/shared_preferences.dart';
-import 'package:chat_to_me/logic/model/chat_request.dart' as chat_request;
 import 'package:chat_to_me/ui/api_key_submit_page.dart';
 import 'package:chat_to_me/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:settings_ui/settings_ui.dart';
 
+import '../logic/model/chat_message.dart';
+
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      Scaffold(
+  Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
           centerTitle: true,
           title: Row(
@@ -57,28 +57,27 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     });
   }
 
-  AlertDialog buildClearAPIKeyDialog(BuildContext context) =>
-      AlertDialog(
+  AlertDialog buildClearAPIKeyDialog(BuildContext context) => AlertDialog(
           title: const Text("You are going to clear your API Key!"),
-          content: const Text("Are you sure to do it?"),
+          content: const Text("Are you sure you wanna do it?"),
           actions: [
             TextButton(
-              onPressed: Navigator
-                  .of(context)
-                  .pop,
+              onPressed: Navigator.of(context).pop,
               child: const Text("No"),
             ),
             TextButton(
                 onPressed: () {
                   deleteApiKey().then((_) {
-                    chat_request.Messages.removeSingleton();
-                    Navigator.of(context)
-                      ..pop()
-                      ..pushAndRemoveUntil(
-                        MaterialPageRoute(
-                            builder: (context) => const ApiKeySubmitPage()),
-                            (route) => false,
-                      );
+                    ChatMessages.removeSingleton();
+                    if (mounted) {
+                      Navigator.of(context)
+                        ..pop()
+                        ..pushAndRemoveUntil(
+                          MaterialPageRoute(
+                              builder: (context) => const ApiKeySubmitPage()),
+                          (route) => false,
+                        );
+                    }
                   });
                 },
                 child: const Text("Yes")),
@@ -106,7 +105,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             ),
             TextField(
               keyboardType:
-              const TextInputType.numberWithOptions(decimal: true),
+                  const TextInputType.numberWithOptions(decimal: true),
               controller: controller,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(
@@ -122,7 +121,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
           onPressed: () {
             deleteChatTemperature().then((_) {
               updateSettings();
-              Navigator.pop(context);
+              if (mounted) Navigator.pop(context);
             });
           },
           child: const Text("Reset"),
@@ -131,9 +130,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
           width: 16.0,
         ),
         TextButton(
-          onPressed: Navigator
-              .of(context)
-              .pop,
+          onPressed: Navigator.of(context).pop,
           child: const Text("No"),
         ),
         TextButton(
@@ -142,7 +139,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             if (temp != null) {
               saveChatTemperature(temp).then((_) {
                 updateSettings();
-                Navigator.pop(context);
+                if (mounted) Navigator.pop(context);
               });
             }
           },
@@ -185,9 +182,9 @@ class _SettingsWidgetState extends State<SettingsWidget> {
         TextButton(
           onPressed: () {
             deleteGlobalDirective().then((_) {
-              chat_request.Messages.singleton().removeSystem();
+              ChatMessages.singleton().removeSystem();
               updateSettings();
-              Navigator.pop(context);
+              if (mounted) Navigator.pop(context);
             });
           },
           child: const Text("Reset"),
@@ -196,9 +193,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
           width: 16.0,
         ),
         TextButton(
-          onPressed: Navigator
-              .of(context)
-              .pop,
+          onPressed: Navigator.of(context).pop,
           child: const Text("No"),
         ),
         TextButton(
@@ -207,8 +202,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             if (text.isNotEmpty) {
               saveGlobalDirective(text).then((_) {
                 updateSettings();
-                chat_request.Messages.singleton().addSystem(text);
-                Navigator.pop(context);
+                ChatMessages.singleton().addSystem(text);
+                if (mounted) Navigator.pop(context);
               });
             }
           },
@@ -219,16 +214,11 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      SettingsList(
+  Widget build(BuildContext context) => SettingsList(
           lightTheme:
-          SettingsThemeData(titleTextColor: Theme
-              .of(context)
-              .primaryColor),
+              SettingsThemeData(titleTextColor: Theme.of(context).primaryColor),
           darkTheme:
-          SettingsThemeData(titleTextColor: Theme
-              .of(context)
-              .primaryColor),
+              SettingsThemeData(titleTextColor: Theme.of(context).primaryColor),
           sections: [
             SettingsSection(
               title: const Text("Common"),
@@ -251,10 +241,10 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   title: const Text("Global directive"),
                   value: _globalDirective != null
                       ? Text(
-                    _globalDirective!,
-                    maxLines: 5,
-                    overflow: TextOverflow.ellipsis,
-                  )
+                          _globalDirective!,
+                          maxLines: 5,
+                          overflow: TextOverflow.ellipsis,
+                        )
                       : null,
                   onPressed: (context) {
                     showDialog(

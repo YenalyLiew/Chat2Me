@@ -44,7 +44,9 @@ An AI chat application based on OpenAI api.
 
 暂时写死使用的是`gpt-3.5-turbo`模型。
 
-在 AI 回答右下角提供了本次回答使用的`tokens`数量和本次回答结束的**结束原因**（`finish_reason`）。
+在 AI 回答右下角提供了本次回答使用的`tokens`数量，本次回答结束的**结束原因**（`finish_reason`）和时间。
+
+对话会储存在历史记录里，并可以在历史记录里重新加载之前的对话。
 
 #### 对话窗口
 
@@ -67,6 +69,5 @@ An AI chat application based on OpenAI api.
 
 ### Chat 对话
 
-1. 保存对话历史记录，并可以通过历史记录对话记忆继续对话。（`SQLite`）
-2. 可以修改用户说的话，使 AI 重新生成对话。（感觉没必要）
-3. 可选 AI 模型，从网络获取你能用哪些模型。
+1. 可以修改用户说的话，使 AI 重新生成对话。（感觉没必要）
+2. 可选 AI 模型，从网络获取你能用哪些模型。

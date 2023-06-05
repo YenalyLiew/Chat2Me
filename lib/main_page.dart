@@ -32,11 +32,17 @@ class WelcomeState extends State<WelcomePage> {
   @override
   void initState() {
     super.initState();
-    apiKey.then((key) => key == null
-        ? Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (_) => const ApiKeySubmitPage()))
-        : Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => const ChatPage())));
+    apiKey.then((key) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        if (key == null) {
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (_) => const ApiKeySubmitPage()));
+        } else {
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (_) => const ChatPage()));
+        }
+      });
+    });
   }
 
   @override

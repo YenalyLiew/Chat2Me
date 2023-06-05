@@ -1,6 +1,10 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../constants.dart';
+// ignore_for_file: constant_identifier_names
+
+const API_KEY_KEY = "API_KEY";
+const CHAT_TEMPERATURE_KEY = "CHAT_TEMPERATURE_KEY";
+const GLOBAL_DIRECTIVE_KEY = "GLOBAL_DIRECTIVE_KEY";
 
 Future<String?> get apiKey async {
   final sp = await SharedPreferences.getInstance();

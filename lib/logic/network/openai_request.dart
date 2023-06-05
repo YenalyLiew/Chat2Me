@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'package:chat_to_me/logic/local/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 import '../model/basic_model.dart';
+import '../model/chat_message.dart';
 import '../model/chat_response.dart' as chat_response;
-import '../model/chat_request.dart' as chat_request;
+
+const _timeoutDuration = Duration(seconds: 10);
 
 Map<String, String> _getAuthenticationHeaders(String key) => {
       "Authorization": "Bearer $key",
@@ -14,7 +17,7 @@ Map<String, String> _getAuthenticationHeaders(String key) => {
 
 Future<chat_response.AIChatResponse?> getAIChatResponse({
   required AIModel model,
-  required chat_request.Messages messages,
+  required ChatMessages messages,
   // double? temperature,
   double? topP,
   int? n,
@@ -30,7 +33,7 @@ Future<chat_response.AIChatResponse?> getAIChatResponse({
   final double? temperature = await chatTemperature;
   log(key ?? '', name: "api_key");
   if (key != null) {
-    var post = await http.post(
+    final Future<http.Response> postFuture = http.post(
       Uri.parse("https://api.openai.com/v1/chat/completions"),
       headers: _getAuthenticationHeaders(key),
       body: jsonEncode(<String, dynamic>{
@@ -48,6 +51,10 @@ Future<chat_response.AIChatResponse?> getAIChatResponse({
         if (user != null) "user": user,
       }),
     );
+    postFuture.timeout(_timeoutDuration,
+        onTimeout: () => http.Response(
+            jsonEncode(<String, dynamic>{"error": "timeout"}), 408));
+    final post = await postFuture;
     String decoded = utf8.decode(post.bodyBytes);
     log(decoded, name: "request_chat_body");
     Map<String, dynamic> decode = jsonDecode(decoded);

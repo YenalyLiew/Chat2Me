@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:about/about.dart' as about;
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'constants.dart';
@@ -12,24 +13,30 @@ extension QuickRandom on Random {
 }
 
 extension ListRandom<T> on List<T> {
-  T random() => this[Random().nextInt(length)];
+  T? random() => isEmpty ? null : this[Random().nextInt(length)];
+}
+
+extension QuickFormat on DateTime {
+  String localFormat({String? format}) =>
+      DateFormat(format ?? DATETIME_PATTERN).format(toLocal());
 }
 
 extension QuickSnackBar on BuildContext {
-  void showFloatingSnackBar(String text) =>
-      ScaffoldMessenger.of(this).showSnackBar(SnackBar(
-        dismissDirection: DismissDirection.none,
-        backgroundColor: Theme.of(this).primaryColor.withOpacity(0.5),
-        content: Text(
-          text,
-          textAlign: TextAlign.center,
-        ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        margin: const EdgeInsets.only(bottom: 100, right: 60, left: 60),
-      ));
+  void showFloatingSnackBar(String text) => ScaffoldMessenger.of(this)
+    ..removeCurrentSnackBar()
+    ..showSnackBar(SnackBar(
+      dismissDirection: DismissDirection.none,
+      backgroundColor: Theme.of(this).primaryColor.withOpacity(0.5),
+      content: Text(
+        text,
+        textAlign: TextAlign.center,
+      ),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
+      margin: const EdgeInsets.only(bottom: 100, right: 60, left: 60),
+    ));
 }
 
 TextSpan setAppNameArtTitleTextSpan({TextStyle? textStyle}) => TextSpan(
