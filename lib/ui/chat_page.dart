@@ -179,6 +179,7 @@ class ChatListFabState extends State<ChatListFabWidget> {
                       Navigator.pop(context);
                     }
                     rootState.resetAllState();
+                    rootState.currentId = null;
                   });
                 },
                 child: const Text("Yes")),

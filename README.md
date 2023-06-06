@@ -32,6 +32,10 @@ An AI chat application based on OpenAI api.
 
 ![](https://github.com/YenalyLiew/Chat2Me/blob/master/screenshot/chat_interface.jpg)
 
+### 对话历史记录界面
+
+![](https://github.com/YenalyLiew/Chat2Me/blob/master/screenshot/chat_history_interface.jpg)
+
 ### 设置界面
 
 ![](https://github.com/YenalyLiew/Chat2Me/blob/master/screenshot/settings_interface.jpg)

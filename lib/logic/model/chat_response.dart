@@ -83,11 +83,11 @@ class Error extends AIChatResponse {
 
   @override
   String toString() {
-    return 'Error {\n'
-        '\tmessage: $message,\n'
-        '\ttype: $type,\n'
-        '\tparam: $param,\n'
-        '\tcode: $code\n'
-        '}';
+    StringBuffer sb = StringBuffer("Oops, something went wrong!\n");
+    if (message != null && message!.isNotEmpty) sb.writeln("message: $message");
+    if (type != null && type!.isNotEmpty) sb.writeln("type: $type");
+    if (param != null && param!.isNotEmpty) sb.writeln("param: $param");
+    if (code != null && code!.isNotEmpty) sb.writeln("code: $code");
+    return sb.toString().substring(0, sb.length - 1);
   }
 }

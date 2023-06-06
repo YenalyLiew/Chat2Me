@@ -95,21 +95,18 @@ abstract class ChatListItem {
 
   static ChatListItem fromHistory(DetailedChatHistory detailedChatHistory) {
     final role = detailedChatHistory.role;
-    switch (role) {
-      case Role.user:
-        return UserChatListItem(
+    return switch (role) {
+      Role.user => UserChatListItem(
           text: detailedChatHistory.content,
           dateTime: detailedChatHistory.dateTime,
-        );
-      case Role.assistant:
-        return AIChatListItem(
+        ),
+      Role.assistant => AIChatListItem(
           name: AIModel.gpt3_5Turbo.name,
           responseFromDatabase: detailedChatHistory.content,
           dateTime: detailedChatHistory.dateTime,
-        );
-      default:
-        throw StateError("Unreachable code.");
-    }
+        ),
+      _ => throw StateError("Unreachable code."),
+    };
   }
 
   MarkdownBody buildMarkdownBody(BuildContext context,
@@ -153,9 +150,18 @@ class UserChatListItem extends ChatListItem {
       );
 
   @override
-  Widget buildName(BuildContext context) => Text(
-        name,
-        style: const TextStyle(fontWeight: FontWeight.bold),
+  Widget buildName(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            name,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          Text(
+            (dateTime ?? DateTime.timestamp()).localFormat(),
+            style: const TextStyle(fontSize: 12),
+          ),
+        ],
       );
 
   @override
@@ -170,8 +176,6 @@ class UserChatListItem extends ChatListItem {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           buildMarkdownBody(context, text: text),
-          const SizedBox(height: 12.0),
-          buildTipText((dateTime ?? DateTime.timestamp()).localFormat()),
         ],
       );
 }
@@ -203,9 +207,18 @@ class AIChatListItem extends ChatListItem {
       );
 
   @override
-  Widget buildName(BuildContext context) => Text(
-        name,
-        style: const TextStyle(fontWeight: FontWeight.bold),
+  Widget buildName(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            name.toUpperCase(),
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          Text(
+            (dateTime ?? DateTime.timestamp()).localFormat(),
+            style: const TextStyle(fontSize: 12),
+          ),
+        ],
       );
 
   @override
@@ -233,7 +246,6 @@ class AIChatListItem extends ChatListItem {
             const SizedBox(height: 12.0),
             buildTipText(s.usage.totalTokens.toString(), what: "total tokens"),
             buildTipText(localizeFinishReason(s.getFirstChoice().finishReason)),
-            buildTipText((dateTime ?? DateTime.timestamp()).localFormat()),
           ],
         );
 
@@ -245,8 +257,6 @@ class AIChatListItem extends ChatListItem {
               e.toString(),
               style: const TextStyle(color: Colors.red),
             ),
-            const SizedBox(height: 12.0),
-            buildTipText((dateTime ?? DateTime.timestamp()).localFormat()),
           ],
         );
 
@@ -257,8 +267,6 @@ class AIChatListItem extends ChatListItem {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               buildMarkdownBody(context, text: rfd),
-              const SizedBox(height: 12.0),
-              buildTipText((dateTime ?? DateTime.timestamp()).localFormat()),
             ],
           );
         } else {
