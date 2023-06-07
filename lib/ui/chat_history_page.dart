@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:chat_to_me/constants.dart';
 import 'package:chat_to_me/logic/local/chat_history_database.dart';
 import 'package:chat_to_me/logic/model/chat_history.dart';
@@ -70,22 +72,28 @@ class _ChatHistoryListViewWidgetState extends State<ChatHistoryListViewWidget> {
 
   List<ChatHistory> _data = [];
 
+  ScaffoldMessengerState? _scaffoldMessengerState;
+
   Future<void> removeAll() async {
     await BaseChatHistoryDatabase.singleton().deleteAllChat();
-    setState(() {
-      _data.clear();
-    });
+    if (mounted) {
+      setState(() {
+        _data.clear();
+      });
+    }
   }
 
   Future<void> remove(int id, [int? index]) async {
     await BaseChatHistoryDatabase.singleton().deleteChatById(id);
-    setState(() {
-      if (index != null) {
-        _data.removeAt(index);
-      } else {
-        _data.removeWhere((element) => element.id == id);
-      }
-    });
+    if (mounted) {
+      setState(() {
+        if (index != null) {
+          _data.removeAt(index);
+        } else {
+          _data.removeWhere((element) => element.id == id);
+        }
+      });
+    }
   }
 
   AlertDialog buildReloadDialog(BuildContext context, int id) => AlertDialog(
@@ -117,28 +125,84 @@ class _ChatHistoryListViewWidgetState extends State<ChatHistoryListViewWidget> {
         ],
       );
 
+  Future<bool> confirmRemoveSnackBar(
+      BuildContext context, int id, int index) async {
+    const snackBarDuration = Duration(seconds: 3);
+    final snackBar = SnackBar(
+      content: const Text("Chat deleted."),
+      action: SnackBarAction(
+        label: "Undo",
+        onPressed: () {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        },
+      ),
+      duration: snackBarDuration,
+    );
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    final controller = ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    final SnackBarClosedReason reason = await controller.closed;
+    log(reason.toString(), name: "SnackBarClosedReason");
+    if (reason != SnackBarClosedReason.action) {
+      await remove(id, index);
+    }
+    return reason != SnackBarClosedReason.action;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _scaffoldMessengerState = ScaffoldMessenger.of(context);
+  }
+
+  @override
+  void dispose() {
+    _scaffoldMessengerState?.hideCurrentSnackBar();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_data.isNotEmpty) {
       return ListView.builder(
         itemCount: _data.length,
-        itemBuilder: (context, index) => ListTile(
-          title: Text(
-            _data[index].content,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 2,
-          ),
-          subtitle: Text(
-            _data[index].dateTime.localFormat(),
-          ),
-          leading: const Icon(Icons.chat_outlined),
-          trailing: const Icon(Icons.arrow_forward_ios),
-          onTap: () {
-            showDialog(
-                context: context,
-                builder: (context) =>
-                    buildReloadDialog(context, _data[index].id!));
+        itemBuilder: (cxt, index) => Dismissible(
+          key: Key("key_${_data[index].id!}"),
+          confirmDismiss: (direction) async {
+            final id = _data[index].id!;
+            if (direction == DismissDirection.endToStart) {
+              final bool confirm =
+                  await confirmRemoveSnackBar(context, id, index);
+              return confirm && mounted;
+            }
+            return null;
           },
+          direction: DismissDirection.endToStart,
+          background: Container(
+            color: Colors.red,
+            alignment: Alignment.center,
+            child: const ListTile(
+              trailing: Icon(Icons.delete),
+              iconColor: Colors.white,
+            ),
+          ),
+          child: ListTile(
+            title: Text(
+              _data[index].content,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+            ),
+            subtitle: Text(
+              _data[index].dateTime.localFormat(),
+            ),
+            leading: const Icon(Icons.article_outlined),
+            trailing: const Icon(Icons.arrow_right),
+            onTap: () {
+              showDialog(
+                  context: context,
+                  builder: (context) =>
+                      buildReloadDialog(context, _data[index].id!));
+            },
+          ),
         ),
       );
     } else {

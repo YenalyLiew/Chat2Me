@@ -67,12 +67,13 @@ class ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    log(state.toString(), name: "ChatPageAppLifecycleState");
     if (state == AppLifecycleState.inactive) {
       saveChatMessagesInDatabase(
               chatMessages: ChatMessages.singleton(), id: currentId)
           .then((id) {
         currentId = id;
-        log("Saved chat messages, id = $id", name: "ChatPageLifecycle");
+        log("Saved chat messages, id = $id", name: "ChatPageLifecycleSave");
       });
     }
   }
