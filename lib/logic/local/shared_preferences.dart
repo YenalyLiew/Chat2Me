@@ -49,12 +49,7 @@ class SharedPreferencesManager<T> {
     final T? val = sp.get(_key) as T? ?? _defaultValue;
     return switch (val) {
       String s => (encrypter == null ? s : encrypter!.decrypt64(s, iv: iv!)),
-      int i => i,
-      double d => d,
-      bool b => b,
-      List<String> l => l,
-      null => null,
-      _ => throw Exception("Type not supported")
+      T? t => t
     } as T?;
   }
 
