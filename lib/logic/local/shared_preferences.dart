@@ -1,3 +1,4 @@
+import 'package:encrypt/encrypt.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore_for_file: constant_identifier_names
@@ -5,48 +6,73 @@ import 'package:shared_preferences/shared_preferences.dart';
 const API_KEY_KEY = "API_KEY";
 const CHAT_TEMPERATURE_KEY = "CHAT_TEMPERATURE_KEY";
 const GLOBAL_DIRECTIVE_KEY = "GLOBAL_DIRECTIVE_KEY";
+const TOP_P_KEY = "TOP_P_KEY";
+const MAX_TOKENS_KEY = "MAX_TOKENS_KEY";
+const PRESENCE_PENALTY_KEY = "PRESENCE_PENALTY_KEY";
+const FREQUENCY_PENALTY_KEY = "FREQUENCY_PENALTY_KEY";
 
-Future<String?> get apiKey async {
-  final sp = await SharedPreferences.getInstance();
-  return sp.getString(API_KEY_KEY);
-}
+final apiKey = SharedPreferencesManager<String>.secure(API_KEY_KEY);
 
-Future<void> saveApiKey(String key) async {
-  final sp = await SharedPreferences.getInstance();
-  await sp.setString(API_KEY_KEY, key);
-}
+final chatTemperature = SharedPreferencesManager<double>(CHAT_TEMPERATURE_KEY);
 
-Future<void> deleteApiKey() async {
-  final sp = await SharedPreferences.getInstance();
-  await sp.remove(API_KEY_KEY);
-}
+final globalDirective = SharedPreferencesManager<String>(GLOBAL_DIRECTIVE_KEY);
 
-Future<double?> get chatTemperature async {
-  final sp = await SharedPreferences.getInstance();
-  return sp.getDouble(CHAT_TEMPERATURE_KEY);
-}
+final topP = SharedPreferencesManager<double>(TOP_P_KEY);
 
-Future<void> saveChatTemperature(double temp) async {
-  final sp = await SharedPreferences.getInstance();
-  await sp.setDouble(CHAT_TEMPERATURE_KEY, temp);
-}
+final maxTokens = SharedPreferencesManager<int>(MAX_TOKENS_KEY);
 
-Future<void> deleteChatTemperature() async {
-  final sp = await SharedPreferences.getInstance();
-  await sp.remove(CHAT_TEMPERATURE_KEY);
-}
+final presencePenalty = SharedPreferencesManager<double>(PRESENCE_PENALTY_KEY);
 
-Future<String?> get globalDirective async {
-  final sp = await SharedPreferences.getInstance();
-  return sp.getString(GLOBAL_DIRECTIVE_KEY);
-}
+final frequencyPenalty =
+    SharedPreferencesManager<double>(FREQUENCY_PENALTY_KEY);
 
-Future<void> saveGlobalDirective(String temp) async {
-  final sp = await SharedPreferences.getInstance();
-  await sp.setString(GLOBAL_DIRECTIVE_KEY, temp);
-}
+class SharedPreferencesManager<T> {
+  SharedPreferencesManager(this._key, [this._defaultValue]);
 
-Future<void> deleteGlobalDirective() async {
-  final sp = await SharedPreferences.getInstance();
-  await sp.remove(GLOBAL_DIRECTIVE_KEY);
+  static const String _secureKey = "Rae6KUIw4HsZWqXuNTXR0mhucZ6gOerI";
+
+  IV? iv;
+  Encrypter? encrypter;
+
+  /// Only support String. If you want to use other type, go to sleep.
+  SharedPreferencesManager.secure(this._key, [this._defaultValue]) {
+    final Key sk = Key.fromUtf8(_secureKey);
+    iv = IV.fromLength(16);
+    encrypter = Encrypter(AES(sk));
+  }
+
+  final String _key;
+  final T? _defaultValue;
+
+  Future<T?> get value async {
+    final sp = await SharedPreferences.getInstance();
+    final T? val = sp.get(_key) as T? ?? _defaultValue;
+    return switch (val) {
+      String s => (encrypter == null ? s : encrypter!.decrypt64(s, iv: iv!)),
+      int i => i,
+      double d => d,
+      bool b => b,
+      List<String> l => l,
+      null => null,
+      _ => throw Exception("Type not supported")
+    } as T?;
+  }
+
+  Future<bool> save(T value) async {
+    final sp = await SharedPreferences.getInstance();
+    return switch (value) {
+      String s => await sp.setString(
+          _key, encrypter == null ? s : encrypter!.encrypt(s, iv: iv!).base64),
+      int i => await sp.setInt(_key, i),
+      double d => await sp.setDouble(_key, d),
+      bool b => await sp.setBool(_key, b),
+      List<String> l => await sp.setStringList(_key, l),
+      _ => throw Exception("Type not supported")
+    };
+  }
+
+  Future<bool> delete() async {
+    final sp = await SharedPreferences.getInstance();
+    return await sp.remove(_key);
+  }
 }

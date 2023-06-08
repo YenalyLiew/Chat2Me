@@ -46,7 +46,7 @@ class ApiKeySubmitPage extends StatelessWidget {
                         final key =
                             _apiKeySubmitTextFieldKey.currentState!.text;
                         if (key.isNotEmpty) {
-                          saveApiKey(key).then((_) {
+                          apiKey.save(key).then((_) {
                             Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(

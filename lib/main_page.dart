@@ -32,7 +32,7 @@ class WelcomeState extends State<WelcomePage> {
   @override
   void initState() {
     super.initState();
-    apiKey.then((key) {
+    apiKey.value.then((key) {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         if (key == null) {
           Navigator.pushReplacement(context,

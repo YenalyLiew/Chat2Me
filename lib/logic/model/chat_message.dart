@@ -26,7 +26,7 @@ class ChatMessages {
   static ChatMessages? _messagesSingleton;
 
   ChatMessages._() {
-    globalDirective.then((String? value) {
+    globalDirective.value.then((String? value) {
       if (value != null) {
         addSystem(value);
       }

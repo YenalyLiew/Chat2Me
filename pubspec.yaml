@@ -46,6 +46,7 @@ dependencies:
   sqflite: ^2.2.8+4
   path: ^1.8.3
   intl: ^0.18.1
+  encrypt: ^5.0.1
 
 
 dev_dependencies:
