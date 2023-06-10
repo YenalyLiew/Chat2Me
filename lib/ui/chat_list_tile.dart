@@ -1,10 +1,10 @@
-import 'package:chat_to_me/logic/model/chat_response.dart' as chat_response;
-import 'package:chat_to_me/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
 import '../logic/model/basic_model.dart';
 import '../logic/model/chat_history.dart';
+import '../logic/model/chat_response.dart' as chat_response;
+import '../utils.dart';
 
 const _markdownDecorationOpacity = 0.05;
 const _markdownTextScaleFactor = 1.15;

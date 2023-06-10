@@ -39,6 +39,16 @@ extension QuickSnackBar on BuildContext {
     ));
 }
 
+extension CheckDatabase on BuildContext {
+  bool get hasDatabaseOnPlatform => switch (Theme.of(this).platform) {
+        TargetPlatform.android ||
+        TargetPlatform.iOS ||
+        TargetPlatform.macOS =>
+          true,
+        _ => false
+      };
+}
+
 TextSpan setAppNameArtTitleTextSpan({TextStyle? textStyle}) => TextSpan(
       style: textStyle,
       children: const <TextSpan>[

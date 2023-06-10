@@ -1,12 +1,17 @@
+import 'package:chat_to_me/logic/local/chat_history_database.dart';
 import 'package:chat_to_me/ui/api_key_submit_page.dart';
 import 'package:chat_to_me/ui/chat_page.dart';
 import 'package:chat_to_me/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'constants.dart';
 import 'logic/local/shared_preferences.dart';
 
-void main() => runApp(const ChatToMe());
+void main() {
+  BaseChatHistoryDatabase.initialize();
+  runApp(const ChatToMe());
+}
 
 class ChatToMe extends StatelessWidget {
   const ChatToMe({super.key});
@@ -29,44 +34,62 @@ class WelcomePage extends StatefulWidget {
 }
 
 class WelcomeState extends State<WelcomePage> {
+  var _opacity = 0.0;
+
   @override
   void initState() {
     super.initState();
     apiKey.value.then((key) {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        if (key == null) {
-          Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (_) => const ApiKeySubmitPage()));
-        } else {
-          Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (_) => const ChatPage()));
-        }
+        setState(() {
+          _opacity = 1.0;
+        });
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (key == null) {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (_) => const ApiKeySubmitPage()));
+          } else {
+            Navigator.pushReplacement(
+                context, MaterialPageRoute(builder: (_) => const ChatPage()));
+          }
+        });
       });
     });
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              const SizedBox(
+  Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            AnimatedOpacity(
+              opacity: _opacity,
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.easeInOut,
+              child: const SizedBox(
                 height: 80,
                 width: 80,
                 child: Image(
                   image: AssetImage(ROUND_LOGO_PATH),
                 ),
               ),
-              const SizedBox(height: 8.0),
-              const Text(
-                "Welcome to",
-                style: TextStyle(fontSize: 24.0),
-                textAlign: TextAlign.center,
-              ),
-              setAppNameArtTitle(textStyle: const TextStyle(fontSize: 32.0)),
-            ],
-          ),
+            ),
+            const SizedBox(height: 8.0),
+            const Text(
+              "Welcome to",
+              style: TextStyle(fontSize: 24.0),
+              textAlign: TextAlign.center,
+            ),
+            setAppNameArtTitle(textStyle: const TextStyle(fontSize: 32.0)),
+          ],
         ),
-      );
+      ),
+    );
+  }
 }

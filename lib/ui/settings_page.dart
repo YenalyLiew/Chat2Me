@@ -1,31 +1,33 @@
 import 'dart:developer';
 
 import 'package:chat_to_me/constants.dart';
-import 'package:chat_to_me/logic/local/shared_preferences.dart';
 import 'package:chat_to_me/ui/api_key_submit_page.dart';
+import 'package:chat_to_me/ui/provider/settings_page_provider.dart';
 import 'package:chat_to_me/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:settings_ui/settings_ui.dart';
-
-import '../logic/model/chat_message.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          centerTitle: true,
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              setAppNameArtTitle(),
-              const Text(" Settings"),
-            ],
+  Widget build(BuildContext context) => ChangeNotifierProvider(
+        create: (context) => SettingsPageProvider(),
+        child: Scaffold(
+          appBar: AppBar(
+            centerTitle: true,
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                setAppNameArtTitle(),
+                const Text(" Settings"),
+              ],
+            ),
           ),
+          body: const SettingsWidget(),
         ),
-        body: const SettingsWidget(),
       );
 }
 
@@ -37,40 +39,10 @@ class SettingsWidget extends StatefulWidget {
 }
 
 class _SettingsWidgetState extends State<SettingsWidget> {
-  double? _chatTemperature;
-  String? _globalDirective;
-  double? _topP;
-  int? _maxTokens;
-  double? _presencePenalty;
-  double? _frequencyPenalty;
-
   @override
   void initState() {
-    updateSettings();
     super.initState();
-  }
-
-  Future<void> updateSettings() async {
-    final double? ct = await chatTemperature.value;
-    log(ct.toString(), name: "chatTemperature");
-    final String? gd = await globalDirective.value;
-    log(gd.toString(), name: "globalDirective");
-    final double? tp = await topP.value;
-    log(tp.toString(), name: "topP");
-    final int? mt = await maxTokens.value;
-    log(mt.toString(), name: "maxTokens");
-    final double? pp = await presencePenalty.value;
-    log(pp.toString(), name: "presencePenalty");
-    final double? fp = await frequencyPenalty.value;
-    log(fp.toString(), name: "frequencyPenalty");
-    setState(() {
-      _chatTemperature = ct;
-      _globalDirective = gd;
-      _topP = tp;
-      _maxTokens = mt;
-      _presencePenalty = pp;
-      _frequencyPenalty = fp;
-    });
+    context.read<SettingsPageProvider>().initialize();
   }
 
   AlertDialog _buildBaseTextFieldDialog<T>(
@@ -83,8 +55,8 @@ class _SettingsWidgetState extends State<SettingsWidget> {
     String? textFieldHint,
     TextInputType? textInputType,
     T? Function(String)? validator,
-    Future<bool> Function()? onReset,
-    Future<bool> Function(T value)? onSave,
+    Future Function()? onReset,
+    Future Function(T value)? onSave,
   }) {
     final controller = TextEditingController(text: value?.toString());
     return AlertDialog(
@@ -114,7 +86,6 @@ class _SettingsWidgetState extends State<SettingsWidget> {
           onPressed: () async {
             await onReset?.call();
             if (mounted) {
-              updateSettings();
               Navigator.pop(context);
             }
           },
@@ -131,7 +102,6 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             if (temp != null) {
               await onSave?.call(temp);
               if (mounted) {
-                updateSettings();
                 Navigator.pop(context);
               }
             }
@@ -145,7 +115,7 @@ class _SettingsWidgetState extends State<SettingsWidget> {
   AlertDialog buildChatTemperatureDialog(BuildContext context) =>
       _buildBaseTextFieldDialog(
         context,
-        _chatTemperature,
+        context.read<SettingsPageProvider>().chatTemperature,
         title: "Set Temperature",
         content: "What sampling temperature to use, "
             "between 0 and 2. "
@@ -158,14 +128,15 @@ class _SettingsWidgetState extends State<SettingsWidget> {
           final parse = double.tryParse(s);
           return (parse != null && parse >= 0.0 && parse <= 2.0) ? parse : null;
         },
-        onReset: chatTemperature.delete,
-        onSave: chatTemperature.save,
+        onReset: () =>
+            context.read<SettingsPageProvider>().setChatTemperature(null),
+        onSave: context.read<SettingsPageProvider>().setChatTemperature,
       );
 
   AlertDialog buildGlobalDirectiveDialog(BuildContext context) =>
       _buildBaseTextFieldDialog(
         context,
-        _globalDirective,
+        context.read<SettingsPageProvider>().globalDirective,
         title: "Set Global Directive",
         content: "This is actually named \"System Role\" officially.\n"
             "In the ChatGPT API, the role \"system\" is used for system-level instructions or control. "
@@ -176,60 +147,61 @@ class _SettingsWidgetState extends State<SettingsWidget> {
         textFieldHint: "Global directive",
         textInputType: TextInputType.text,
         validator: (s) => s.isNotEmpty ? s : null,
-        onReset: () {
-          ChatMessages.singleton().removeSystem();
-          return globalDirective.delete();
-        },
-        onSave: (value) {
-          ChatMessages.singleton().addSystem(value);
-          return globalDirective.save(value);
-        },
+        onReset: () =>
+            context.read<SettingsPageProvider>().setGlobalDirective(null),
+        onSave: context.read<SettingsPageProvider>().setGlobalDirective,
       );
 
   AlertDialog buildTopPDialog(BuildContext context) =>
       _buildBaseTextFieldDialog(
         context,
-        _topP,
+        context.read<SettingsPageProvider>().topP,
         title: "Set Top P Sampling",
         content: "An alternative to sampling with temperature, "
             "called nucleus sampling, "
             "where the model considers the results of the tokens with top_p probability mass. "
             "So 0.1 means only the tokens comprising the top 10% probability mass are considered.\n"
             "We generally recommend altering this or temperature but not both.",
+        textFieldMinLines: 1,
+        textFieldMaxLines: 1,
         textFieldHint: "Top P (0.0 ~ 1.0)",
         textInputType: const TextInputType.numberWithOptions(decimal: true),
         validator: (s) {
           final parse = double.tryParse(s);
           return (parse != null && parse >= 0.0 && parse <= 1.0) ? parse : null;
         },
-        onReset: topP.delete,
-        onSave: topP.save,
+        onReset: () => context.read<SettingsPageProvider>().setTopP(null),
+        onSave: context.read<SettingsPageProvider>().setTopP,
       );
 
   AlertDialog buildMaxTokensDialog(BuildContext context) =>
       _buildBaseTextFieldDialog(
         context,
-        _maxTokens,
+        context.read<SettingsPageProvider>().maxTokens,
         title: "Set Max Tokens",
         content: "The maximum number of tokens to generate. ",
+        textFieldMinLines: 1,
+        textFieldMaxLines: 1,
         textFieldHint: "Max Tokens (0 ~ inf)",
         textInputType: TextInputType.number,
         validator: (s) {
           final parse = int.tryParse(s);
           return (parse != null && parse >= 0) ? parse : null;
         },
-        onReset: maxTokens.delete,
-        onSave: maxTokens.save,
+        onReset: () => context.read<SettingsPageProvider>().setMaxTokens(null),
+        onSave: context.read<SettingsPageProvider>().setMaxTokens,
       );
 
   AlertDialog buildPresencePenaltyDialog(BuildContext context) =>
       _buildBaseTextFieldDialog(
         context,
-        _presencePenalty,
+        context.read<SettingsPageProvider>().presencePenalty,
         title: "Set Presence Penalty",
         content: "Number between -2.0 and 2.0. "
             "Positive values penalize new tokens based on whether they appear in the text so far, "
             "increasing the model's likelihood to talk about new topics.",
+        textFieldMinLines: 1,
+        textFieldMaxLines: 1,
         textFieldHint: "Presence Penalty (-2.0 ~ 2.0)",
         textInputType:
             const TextInputType.numberWithOptions(decimal: true, signed: true),
@@ -239,18 +211,21 @@ class _SettingsWidgetState extends State<SettingsWidget> {
               ? parse
               : null;
         },
-        onReset: presencePenalty.delete,
-        onSave: presencePenalty.save,
+        onReset: () =>
+            context.read<SettingsPageProvider>().setPresencePenalty(null),
+        onSave: context.read<SettingsPageProvider>().setPresencePenalty,
       );
 
   AlertDialog buildFrequencyPenaltyDialog(BuildContext context) =>
       _buildBaseTextFieldDialog(
         context,
-        _frequencyPenalty,
+        context.read<SettingsPageProvider>().frequencyPenalty,
         title: "Set Frequency Penalty",
         content: "Number between -2.0 and 2.0. "
             "Positive values penalize new tokens based on their existing frequency in the text so far, "
             "decreasing the model's likelihood to repeat the same line verbatim.",
+        textFieldMinLines: 1,
+        textFieldMaxLines: 1,
         textFieldHint: "Frequency Penalty (-2.0 ~ 2.0)",
         textInputType:
             const TextInputType.numberWithOptions(decimal: true, signed: true),
@@ -260,8 +235,9 @@ class _SettingsWidgetState extends State<SettingsWidget> {
               ? parse
               : null;
         },
-        onReset: frequencyPenalty.delete,
-        onSave: frequencyPenalty.save,
+        onReset: () =>
+            context.read<SettingsPageProvider>().setFrequencyPenalty(null),
+        onSave: context.read<SettingsPageProvider>().setFrequencyPenalty,
       );
 
   AlertDialog buildClearAPIKeyDialog(BuildContext context) => AlertDialog(
@@ -273,19 +249,17 @@ class _SettingsWidgetState extends State<SettingsWidget> {
               child: const Text("No"),
             ),
             TextButton(
-                onPressed: () {
-                  apiKey.delete().then((_) {
-                    ChatMessages.removeSingleton();
-                    if (mounted) {
-                      Navigator.of(context)
-                        ..pop()
-                        ..pushAndRemoveUntil(
-                          MaterialPageRoute(
-                              builder: (context) => const ApiKeySubmitPage()),
-                          (route) => false,
-                        );
-                    }
-                  });
+                onPressed: () async {
+                  await context.read<SettingsPageProvider>().removeApiKey();
+                  if (mounted) {
+                    Navigator.of(context)
+                      ..pop()
+                      ..pushAndRemoveUntil(
+                        MaterialPageRoute(
+                            builder: (context) => const ApiKeySubmitPage()),
+                        (route) => false,
+                      );
+                  }
                 },
                 child: const Text("Yes")),
           ]);
@@ -303,9 +277,10 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                 SettingsTile(
                   leading: const Icon(Icons.clear_all),
                   title: const Text("Clear API Key"),
-                  onPressed: (context) {
+                  onPressed: (_) {
                     showDialog(
-                        context: context, builder: buildClearAPIKeyDialog);
+                        context: context,
+                        builder: (_) => buildClearAPIKeyDialog(context));
                   },
                 ),
               ],
@@ -317,57 +292,73 @@ class _SettingsWidgetState extends State<SettingsWidget> {
                   leading: const Icon(Icons.directions_outlined),
                   title: const Text("Global Directive"),
                   value: Text(
-                    _globalDirective ?? "None",
+                    context.watch<SettingsPageProvider>().globalDirective ??
+                        "None",
                     maxLines: 5,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  onPressed: (context) {
+                  onPressed: (_) {
                     showDialog(
-                        context: context, builder: buildGlobalDirectiveDialog);
+                        context: context,
+                        builder: (_) => buildGlobalDirectiveDialog(context));
                   },
                 ),
                 SettingsTile(
                   leading: const Icon(Icons.emoji_emotions_outlined),
                   title: const Text("Temperature"),
-                  value: Text("${_chatTemperature ?? "Default"}"),
-                  onPressed: (context) {
+                  value: Text(
+                    "${context.watch<SettingsPageProvider>().chatTemperature ?? "Default"}",
+                    maxLines: 5,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onPressed: (_) {
                     showDialog(
-                        context: context, builder: buildChatTemperatureDialog);
+                        context: context,
+                        builder: (_) => buildChatTemperatureDialog(context));
                   },
                 ),
                 SettingsTile(
                   leading: const Icon(Icons.more_horiz),
                   title: const Text("Top P Sampling"),
-                  value: Text("${_topP ?? "Default"}"),
-                  onPressed: (context) {
-                    showDialog(context: context, builder: buildTopPDialog);
+                  value: Text(
+                      "${context.watch<SettingsPageProvider>().topP ?? "Default"}"),
+                  onPressed: (_) {
+                    showDialog(
+                        context: context,
+                        builder: (_) => buildTopPDialog(context));
                   },
                 ),
                 SettingsTile(
                   leading: const Icon(Icons.vertical_align_top),
                   title: const Text("Max Tokens"),
-                  value: Text("${_maxTokens ?? "Default"}"),
-                  onPressed: (context) {
+                  value: Text(
+                      "${context.watch<SettingsPageProvider>().maxTokens ?? "Default"}"),
+                  onPressed: (_) {
                     showDialog(
-                        context: context, builder: buildMaxTokensDialog);
+                        context: context,
+                        builder: (_) => buildMaxTokensDialog(context));
                   },
                 ),
                 SettingsTile(
                   leading: const Icon(Icons.repeat),
                   title: const Text("Presence Penalty"),
-                  value: Text("${_presencePenalty ?? "Default"}"),
-                  onPressed: (context) {
+                  value: Text(
+                      "${context.watch<SettingsPageProvider>().presencePenalty ?? "Default"}"),
+                  onPressed: (_) {
                     showDialog(
-                        context: context, builder: buildPresencePenaltyDialog);
+                        context: context,
+                        builder: (_) => buildPresencePenaltyDialog(context));
                   },
                 ),
                 SettingsTile(
                   leading: const Icon(Icons.loop),
                   title: const Text("Frequency Penalty"),
-                  value: Text("${_frequencyPenalty ?? "Default"}"),
-                  onPressed: (context) {
+                  value: Text(
+                      "${context.watch<SettingsPageProvider>().frequencyPenalty ?? "Default"}"),
+                  onPressed: (_) {
                     showDialog(
-                        context: context, builder: buildFrequencyPenaltyDialog);
+                        context: context,
+                        builder: (_) => buildFrequencyPenaltyDialog(context));
                   },
                 ),
               ],

@@ -13,33 +13,33 @@ const FREQUENCY_PENALTY_KEY = "FREQUENCY_PENALTY_KEY";
 
 final apiKey = SharedPreferencesManager<String>.secure(API_KEY_KEY);
 
-final chatTemperature = SharedPreferencesManager<double>(CHAT_TEMPERATURE_KEY);
+const chatTemperature = SharedPreferencesManager<double>(CHAT_TEMPERATURE_KEY);
 
-final globalDirective = SharedPreferencesManager<String>(GLOBAL_DIRECTIVE_KEY);
+const globalDirective = SharedPreferencesManager<String>(GLOBAL_DIRECTIVE_KEY);
 
-final topP = SharedPreferencesManager<double>(TOP_P_KEY);
+const topP = SharedPreferencesManager<double>(TOP_P_KEY);
 
-final maxTokens = SharedPreferencesManager<int>(MAX_TOKENS_KEY);
+const maxTokens = SharedPreferencesManager<int>(MAX_TOKENS_KEY);
 
-final presencePenalty = SharedPreferencesManager<double>(PRESENCE_PENALTY_KEY);
+const presencePenalty = SharedPreferencesManager<double>(PRESENCE_PENALTY_KEY);
 
-final frequencyPenalty =
+const frequencyPenalty =
     SharedPreferencesManager<double>(FREQUENCY_PENALTY_KEY);
 
 class SharedPreferencesManager<T> {
-  SharedPreferencesManager(this._key, [this._defaultValue]);
+  const SharedPreferencesManager(this._key, [this._defaultValue])
+      : iv = null,
+        encrypter = null;
 
   static const String _secureKey = "Rae6KUIw4HsZWqXuNTXR0mhucZ6gOerI";
 
-  IV? iv;
-  Encrypter? encrypter;
+  final IV? iv;
+  final Encrypter? encrypter;
 
   /// Only support String. If you want to use other type, go to sleep.
-  SharedPreferencesManager.secure(this._key, [this._defaultValue]) {
-    final Key sk = Key.fromUtf8(_secureKey);
-    iv = IV.fromLength(16);
-    encrypter = Encrypter(AES(sk));
-  }
+  SharedPreferencesManager.secure(this._key, [this._defaultValue])
+      : iv = IV.fromLength(16),
+        encrypter = Encrypter(AES(Key.fromUtf8(_secureKey)));
 
   final String _key;
   final T? _defaultValue;

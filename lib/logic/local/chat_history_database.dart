@@ -38,14 +38,20 @@ class BaseChatHistoryDatabase {
   factory BaseChatHistoryDatabase.singleton() =>
       _baseChatHistoryDatabase ??= BaseChatHistoryDatabase._();
 
-  late Future<Database> _database;
+  Database? _database;
+  late Future<Database> _databaseFuture;
   late ChatHistoryDatabase chats;
   late DetailedChatHistoryDatabase detailed;
 
+  static Future<void> initialize() async {
+    final db = BaseChatHistoryDatabase.singleton();
+    db._database = await (db._databaseFuture = db._getChatHistoryDatabase());
+  }
+
   BaseChatHistoryDatabase._() {
-    _database = _getChatHistoryDatabase();
-    detailed = DetailedChatHistoryDatabase._withDatabase(_database);
-    chats = ChatHistoryDatabase._withDatabase(_database);
+    _databaseFuture = _getChatHistoryDatabase();
+    detailed = DetailedChatHistoryDatabase._withDatabase(_databaseFuture);
+    chats = ChatHistoryDatabase._withDatabase(_databaseFuture);
   }
 
   Future<Database> _getChatHistoryDatabase() async {
@@ -77,7 +83,7 @@ class BaseChatHistoryDatabase {
     ChatHistory chatHistory,
     List<DetailedChatHistory> detailedChatHistoryList,
   ) async {
-    final db = await _database;
+    final db = _database ?? await _databaseFuture;
     final id = await chats._insert(chatHistory, db);
     for (final detailedChatHistory in detailedChatHistoryList) {
       detailedChatHistory.id = id; // IMPORTANT!
@@ -91,21 +97,21 @@ class BaseChatHistoryDatabase {
     ChatHistory chatHistory,
     List<DetailedChatHistory> detailedChatHistoryList,
   ) async {
-    final db = await _database;
+    final db = _database ?? await _databaseFuture;
     final newId = await chats._updateToFirst(id, chatHistory, db);
     await detailed._updateToFirst(newId, detailedChatHistoryList, db);
     return newId;
   }
 
   Future<int> deleteChatById(int id) async {
-    final db = await _database;
+    final db = _database ?? await _databaseFuture;
     await chats._deleteById(id, db);
     await detailed._deleteById(id, db);
     return id;
   }
 
   Future<({int rows, int dRows})> deleteAllChat() async {
-    final db = await _database;
+    final db = _database ?? await _databaseFuture;
     final rows = await chats._deleteAll(db);
     final dRows = await detailed._deleteAll(db);
     return (rows: rows, dRows: dRows);
@@ -113,12 +119,12 @@ class BaseChatHistoryDatabase {
 }
 
 class ChatHistoryDatabase {
-  final Future<Database> _database;
+  final Future<Database> _databaseFuture;
 
-  const ChatHistoryDatabase._withDatabase(this._database);
+  const ChatHistoryDatabase._withDatabase(this._databaseFuture);
 
   Future<int> _insert(ChatHistory chatHistory, [Database? database]) async {
-    final db = database ?? await _database;
+    final db = database ?? await _databaseFuture;
     final id = await db.insert(
       BaseChatHistoryDatabase.tableName,
       chatHistory.toMap(),
@@ -129,7 +135,7 @@ class ChatHistoryDatabase {
 
   Future<int> _updateToFirst(int id, ChatHistory chatHistory,
       [Database? database]) async {
-    final db = database ?? await _database;
+    final db = database ?? await _databaseFuture;
     await _deleteById(id);
     final newId = await db.insert(
       BaseChatHistoryDatabase.tableName,
@@ -140,7 +146,7 @@ class ChatHistoryDatabase {
   }
 
   Future<int> _deleteById(int id, [Database? database]) async {
-    final db = database ?? await _database;
+    final db = database ?? await _databaseFuture;
     return await db.delete(
       BaseChatHistoryDatabase.tableName,
       where: "id = ?",
@@ -149,12 +155,12 @@ class ChatHistoryDatabase {
   }
 
   Future<int> _deleteAll([Database? database]) async {
-    final db = database ?? await _database;
+    final db = database ?? await _databaseFuture;
     return await db.delete(BaseChatHistoryDatabase.tableName);
   }
 
   Future<List<ChatHistory>> get allChatHistory async {
-    final db = await _database;
+    final db = await _databaseFuture;
     final list =
         await db.query(BaseChatHistoryDatabase.tableName, orderBy: "id DESC");
     return list.map((e) => ChatHistory.fromMap(e)).toList();
@@ -162,13 +168,13 @@ class ChatHistoryDatabase {
 }
 
 class DetailedChatHistoryDatabase {
-  final Future<Database> _database;
+  final Future<Database> _databaseFuture;
 
-  const DetailedChatHistoryDatabase._withDatabase(this._database);
+  const DetailedChatHistoryDatabase._withDatabase(this._databaseFuture);
 
   Future<int> _insert(DetailedChatHistory detailedChatHistory,
       [Database? database]) async {
-    final db = database ?? await _database;
+    final db = database ?? await _databaseFuture;
     return await db.insert(
       BaseChatHistoryDatabase.detailedTableName,
       detailedChatHistory.toMap(),
@@ -179,7 +185,7 @@ class DetailedChatHistoryDatabase {
   Future<int> _updateToFirst(
       int newId, List<DetailedChatHistory> detailedChatHistoryList,
       [Database? database]) async {
-    final db = database ?? await _database;
+    final db = database ?? await _databaseFuture;
     await _deleteById(newId, db);
     for (final detailedChatHistory in detailedChatHistoryList) {
       detailedChatHistory.id = newId; // IMPORTANT!
@@ -189,7 +195,7 @@ class DetailedChatHistoryDatabase {
   }
 
   Future<int> _deleteById(int id, [Database? database]) async {
-    final db = database ?? await _database;
+    final db = database ?? await _databaseFuture;
     return await db.delete(
       BaseChatHistoryDatabase.detailedTableName,
       where: "id = ?",
@@ -198,12 +204,12 @@ class DetailedChatHistoryDatabase {
   }
 
   Future<int> _deleteAll([Database? database]) async {
-    final db = database ?? await _database;
+    final db = database ?? await _databaseFuture;
     return await db.delete(BaseChatHistoryDatabase.detailedTableName);
   }
 
   Future<List<DetailedChatHistory>> load(int id) async {
-    final db = await _database;
+    final db = await _databaseFuture;
     final query = await db.query(
       BaseChatHistoryDatabase.detailedTableName,
       where: "id = ?",

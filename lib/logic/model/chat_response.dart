@@ -27,11 +27,7 @@ class Choices {
 
   factory Choices.convert(List<dynamic> mapList) {
     // dynamic == Map<String, dynamic>
-    List<Choice> choices = [];
-    for (var choice in mapList) {
-      choices.add(Choice.convert(choice));
-    }
-    return Choices(choices);
+    return Choices(mapList.map((e) => Choice.convert(e)).toList());
   }
 }
 
@@ -73,13 +69,13 @@ class Error extends AIChatResponse {
   final String? param;
   final String? code;
 
-  Error(this.message, this.type, this.param, this.code);
+  Error({this.message, this.type, this.param, this.code});
 
   factory Error.fromJson(Map<String, dynamic> map) => Error(
-      map["error"]["message"],
-      map["error"]["type"],
-      map["error"]["param"],
-      map["error"]["code"]);
+      message: map["error"]["message"],
+      type: map["error"]["type"],
+      param: map["error"]["param"],
+      code: map["error"]["code"]);
 
   @override
   String toString() {

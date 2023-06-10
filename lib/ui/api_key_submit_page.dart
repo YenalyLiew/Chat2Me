@@ -42,17 +42,18 @@ class ApiKeySubmitPage extends StatelessWidget {
                       shape: const RoundedRectangleBorder(
                           borderRadius:
                               BorderRadius.all(Radius.circular(100.0))),
-                      onPressed: () {
+                      onPressed: () async {
                         final key =
                             _apiKeySubmitTextFieldKey.currentState!.text;
                         if (key.isNotEmpty) {
-                          apiKey.save(key).then((_) {
+                          await apiKey.save(key);
+                          if (context.mounted) {
                             Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => const ChatPage(),
                                 ));
-                          });
+                          }
                         } else {
                           context
                               .showFloatingSnackBar("API Key cannot be empty!");
