@@ -1,30 +1,11 @@
-import 'package:chat_to_me/logic/local/chat_history_database.dart';
 import 'package:chat_to_me/ui/api_key_submit_page.dart';
 import 'package:chat_to_me/ui/chat_page.dart';
 import 'package:chat_to_me/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'constants.dart';
-import 'logic/local/shared_preferences.dart';
-
-void main() {
-  BaseChatHistoryDatabase.initialize();
-  runApp(const ChatToMe());
-}
-
-class ChatToMe extends StatelessWidget {
-  const ChatToMe({super.key});
-
-  @override
-  Widget build(BuildContext context) => MaterialApp(
-        title: APP_NAME,
-        theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightGreen),
-            useMaterial3: true),
-        home: const WelcomePage(),
-      );
-}
+import '../constants.dart';
+import '../logic/local/shared_preferences.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});

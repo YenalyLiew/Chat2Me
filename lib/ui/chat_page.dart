@@ -1,7 +1,6 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 
 import '../constants.dart';
@@ -19,51 +18,31 @@ class ChatPage extends StatefulWidget {
   State<ChatPage> createState() => ChatPageState();
 }
 
-class ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
+class ChatPageState extends State<ChatPage> {
   Future<void> _navigateForResult(BuildContext context) async {
     final Map<String, dynamic>? result = await Navigator.push(
         context, MaterialPageRoute(builder: (_) => const ChatHistoryPage()));
     if (result != null) {
+      final bool? hasDeletedAll = result[DELETE_ALL_TO_CHAT_PARAM];
+      if (hasDeletedAll == true && mounted) {
+        context.read<ChatPageProvider>().currentChatHistoryID = null;
+        return;
+      }
       final int id = result[HISTORY_ID_TO_CHAT_PARAM];
       final List<DetailedChatHistory> histories =
           result[HISTORIES_TO_CHAT_PARAM];
       if (mounted) {
         context
             .read<ChatPageProvider>()
-            .loadChatFromChatHistoryPage(context, id, histories);
+            .loadChatFromChatHistoryPage(id, histories);
       }
     }
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    log(state.toString(), name: "ChatPageAppLifecycleState");
-    if (state == AppLifecycleState.inactive) {
-      context
-          .read<ChatPageProvider>()
-          .saveMessagesToDatabase(context)
-          .then((id) {
-        log("Saved chat messages, id = $id", name: "ChatPageLifecycleSave");
-      });
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    WidgetsBinding.instance.removeObserver(this);
-  }
-
-  @override
   Widget build(BuildContext context) => ChangeNotifierProvider(
-        create: (context) => ChatPageProvider(),
-        child: Scaffold(
+        create: (context) => ChatPageProvider(context),
+        builder: (context, child) => Scaffold(
           appBar: AppBar(
             centerTitle: true,
             title: setAppNameArtTitle(),
@@ -134,15 +113,16 @@ class ChatListFabState extends State<ChatListFabWidget> {
             ),
             TextButton(
                 onPressed: () async {
-                  final provider = context.read<ChatPageProvider>();
-                  final int? id =
-                      await provider.saveMessagesToDatabase(context);
-                  provider.resetAllState();
+                  final int? id = await context
+                      .read<ChatPageProvider>()
+                      .saveMessagesToDatabase();
+                  if (mounted) context.read<ChatPageProvider>().resetAllState();
                   log(id.toString(), name: "ChatCurrentId");
                   if (mounted) {
-                    provider.currentID = null;
-                    Navigator.pop(context);
+                    context.read<ChatPageProvider>().currentChatHistoryID =
+                        null;
                   }
+                  if (mounted) Navigator.pop(context);
                 },
                 child: const Text("Yes")),
           ]);
@@ -182,25 +162,28 @@ class ChatListViewWidget extends StatefulWidget {
   State<StatefulWidget> createState() => ChatListViewState();
 }
 
-class ChatListViewState extends State<ChatListViewWidget> {
+class ChatListViewState extends State<ChatListViewWidget>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
 
-    final read = context.read<ChatPageProvider>();
-    read.scrollController.addListener(() {
-      read.textFocusNode.unfocus();
-      switch (read.scrollController.position.userScrollDirection) {
-        case ScrollDirection.forward:
-          read.isFabVisible = true;
-          break;
-        case ScrollDirection.reverse:
-          read.isFabVisible = false;
-          break;
-        default:
-          break;
-      }
-    });
+  @override
+  void dispose() {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    log(state.toString(), name: "ChatPageAppLifecycleState");
+    if (state == AppLifecycleState.inactive) {
+      context.read<ChatPageProvider>().saveMessagesToDatabase().then((id) {
+        log("Saved chat messages, id = $id", name: "ChatPageLifecycleSave");
+      });
+    }
   }
 
   @override
@@ -255,9 +238,8 @@ class InputTextFieldState extends State<InputTextFieldWidget> {
                     Icons.send,
                     color: Theme.of(context).primaryColor,
                   ),
-                  onPressed: () => context
-                      .read<ChatPageProvider>()
-                      .requestAIChatResponse(context),
+                  onPressed: () =>
+                      context.read<ChatPageProvider>().requestAIChatResponse(),
                 ),
           filled: true,
           fillColor: Theme.of(context).primaryColor.withOpacity(0.05),

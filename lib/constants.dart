@@ -12,6 +12,7 @@ const APP_GITHUB_OPEN_SOURCE_LICENSES_LINK =
 
 const HISTORIES_TO_CHAT_PARAM = "histories";
 const HISTORY_ID_TO_CHAT_PARAM = "id";
+const DELETE_ALL_TO_CHAT_PARAM = "delete_all";
 
 const MARKDOWN_TEST = """
 # Markdown Example

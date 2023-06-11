@@ -13,7 +13,7 @@ Future<int?> saveChatMessagesInDatabase(
     {required ChatMessages chatMessages, DateTime? dateTime, int? id}) async {
   final first = chatMessages.firstUserMessage;
   if (first == null) {
-    return null;
+    return id;
   }
   final chatHistory = ChatHistory(
     id: id,

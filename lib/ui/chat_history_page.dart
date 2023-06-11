@@ -6,6 +6,8 @@ import 'package:chat_to_me/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../main.dart';
+
 class ChatHistoryPage extends StatelessWidget {
   const ChatHistoryPage({super.key});
 
@@ -20,7 +22,12 @@ class ChatHistoryPage extends StatelessWidget {
           TextButton(
               onPressed: () async {
                 await context.read<ChatHistoryProvider>().deleteAllHistory();
-                if (context.mounted) Navigator.pop(context);
+                if (context.mounted) Navigator.pop(context); // pop dialog
+                if (context.mounted) {
+                  Navigator.pop(context, {
+                    DELETE_ALL_TO_CHAT_PARAM: true,
+                  }); // pop history
+                }
               },
               child: const Text("OK")),
         ],
@@ -28,8 +35,8 @@ class ChatHistoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider(
-        create: (_) => ChatHistoryProvider(),
-        child: Scaffold(
+        create: (context) => ChatHistoryProvider(context),
+        builder: (context, child) => Scaffold(
           appBar: AppBar(
             centerTitle: true,
             title: const Text("Chat History"),
@@ -78,8 +85,7 @@ class _ChatHistoryListViewWidgetState extends State<ChatHistoryListViewWidget> {
           ),
           TextButton(
             onPressed: () async {
-              final histories =
-                  await context.read<ChatHistoryProvider>().loadHistoryByID(id);
+              final histories = await App.globalProvider.loadHistoryByID(id);
               if (mounted) Navigator.pop(context); // pop dialog
               if (mounted) {
                 Navigator.pop(context, <String, dynamic>{
@@ -112,7 +118,9 @@ class _ChatHistoryListViewWidgetState extends State<ChatHistoryListViewWidget> {
     log(reason.toString(), name: "SnackBarClosedReason");
     if (reason != SnackBarClosedReason.action) {
       if (mounted) {
-        await context.read<ChatHistoryProvider>().deleteHistoryByID(id, index);
+        context.read<ChatHistoryProvider>().deleteHistoryByID(id, index);
+      } else {
+        App.globalProvider.deleteHistoryByID(id);
       }
     }
     return reason != SnackBarClosedReason.action;
@@ -170,7 +178,7 @@ class _ChatHistoryListViewWidgetState extends State<ChatHistoryListViewWidget> {
                 onTap: () {
                   showDialog(
                       context: context,
-                      builder: (context) =>
+                      builder: (_) =>
                           buildReloadDialog(context, read.data[index].id!));
                 },
               ),

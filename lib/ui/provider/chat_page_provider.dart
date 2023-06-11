@@ -1,11 +1,14 @@
 import 'dart:developer';
 
 import 'package:async/async.dart';
+import 'package:chat_to_me/ui/provider/global_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:provider/provider.dart';
 
-import '../../utils.dart';
 import '../../logic/local/chat_history_database.dart';
+import '../../utils.dart';
 import '../../logic/model/basic_model.dart';
 import '../../logic/model/chat_history.dart';
 import '../../logic/model/chat_response.dart';
@@ -14,6 +17,29 @@ import '../chat_list_tile.dart';
 import '../../logic/model/chat_message.dart';
 
 class ChatPageProvider extends ChangeNotifier {
+  final BuildContext _context;
+  final GlobalProvider _globalProvider;
+
+  ChatPageProvider(this._context)
+      : _globalProvider = _context.read<GlobalProvider>() {
+    scrollController.addListener(() {
+      textFocusNode.unfocus();
+      switch (scrollController.position.userScrollDirection) {
+        case ScrollDirection.forward:
+          isFabVisible = true;
+          break;
+        case ScrollDirection.reverse:
+          isFabVisible = false;
+          break;
+        default:
+          break;
+      }
+    });
+  }
+
+  /// Current Chat ID if exists in database.
+  int? currentChatHistoryID;
+
   final List<ChatListItem> chatListItem = [];
 
   void resetAllState() {
@@ -86,11 +112,10 @@ class ChatPageProvider extends ChangeNotifier {
 
   CancelableOperation<AIChatResponse>? _temporaryCancelableAIChatResponse;
 
-  Future<void> requestAIChatResponse(BuildContext context,
-      {AIModel? aiModel}) async {
+  Future<void> requestAIChatResponse({AIModel? aiModel}) async {
     final String text = textController.text;
-    if (text.trim().isEmpty || !context.mounted) {
-      context.showFloatingSnackBar('Message cannot be empty!');
+    if (text.trim().isEmpty || !_context.mounted) {
+      _context.showFloatingSnackBar('Message cannot be empty!');
       return;
     }
     addUser(text: text, dateTime: DateTime.timestamp());
@@ -163,30 +188,30 @@ class ChatPageProvider extends ChangeNotifier {
 
   // Database
 
-  /// Current Chat ID if exists in database.
-  int? currentID;
-
-  Future<int?> saveMessagesToDatabase(BuildContext context, [int? id]) async {
-    if (context.mounted && !context.hasDatabaseOnPlatform) {
-      return null;
-    }
-    int? newID = await saveChatMessagesInDatabase(
-      chatMessages: ChatMessages.singleton(),
-      id: id ?? currentID,
-      dateTime: DateTime.timestamp(),
-    );
-    return currentID = newID;
-  }
-
-  Future<int?> loadChatFromChatHistoryPage(BuildContext context, int? id,
-      List<DetailedChatHistory> histories) async {
-    int? newID = await saveMessagesToDatabase(context, id);
+  Future<int?> loadChatFromChatHistoryPage(
+      int? id, List<DetailedChatHistory> histories) async {
+    int? newID = await saveMessagesToDatabase(id);
     resetAllState();
     for (final history in histories) {
       chatListItem.add(ChatListItem.fromHistory(history));
       ChatMessages.singleton().addHistory(history);
     }
     notifyListeners();
+    return newID;
+  }
+
+  Future<int?> saveMessagesToDatabase([int? id]) async {
+    if (_context.mounted && !_context.hasDatabaseOnPlatform) {
+      return null;
+    }
+    int? newID = await saveChatMessagesInDatabase(
+      chatMessages: ChatMessages.singleton(),
+      id: id ?? currentChatHistoryID,
+      dateTime: DateTime.timestamp(),
+    );
+    if (_context.mounted) {
+      currentChatHistoryID = newID;
+    }
     return newID;
   }
 }
