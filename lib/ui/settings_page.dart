@@ -8,8 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:settings_ui/settings_ui.dart';
 
-import 'provider/chat_page_provider.dart';
-
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -253,9 +251,6 @@ class _SettingsWidgetState extends State<SettingsWidget> {
             TextButton(
                 onPressed: () async {
                   await context.read<SettingsPageProvider>().removeApiKey();
-                  if (mounted) {
-                    context.read<ChatPageProvider>().resetAllState();
-                  }
                   if (mounted) {
                     Navigator.of(context)
                       ..pop()
