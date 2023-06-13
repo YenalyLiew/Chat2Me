@@ -14,7 +14,6 @@ void _configureDio(String key) {
   _dio.options.baseUrl = "https://api.openai.com/v1/";
   _dio.options.headers = _getAuthenticationHeaders(key);
   _dio.options.connectTimeout = _timeoutDuration;
-  _dio.options.receiveTimeout = _timeoutDuration;
   _dio.options.sendTimeout = _timeoutDuration;
 }
 

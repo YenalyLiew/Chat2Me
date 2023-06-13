@@ -223,8 +223,8 @@ class InputTextFieldState extends State<InputTextFieldWidget> {
     return TextField(
       minLines: 1,
       maxLines: 10,
-      focusNode: context.watch<ChatPageProvider>().textFocusNode,
-      controller: context.watch<ChatPageProvider>().textController,
+      focusNode: context.read<ChatPageProvider>().textFocusNode,
+      controller: context.read<ChatPageProvider>().textController,
       decoration: InputDecoration(
           hintText: "Say something...",
           hintStyle: TextStyle(color: Colors.grey.shade600),
